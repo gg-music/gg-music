@@ -1,0 +1,9 @@
+.env
+npm-debug.log
+yarn-error.log
+
+# ai related
+*.csv
+*.h5
+*.m
+*.pkl
