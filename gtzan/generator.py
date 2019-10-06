@@ -1,7 +1,9 @@
 from abc import abstractmethod
 import numpy as np
 import math
-from tensorflow.python.keras.utils import Sequence ,to_categorical
+import os
+import tensorflow as tf
+from tensorflow.keras.utils import Sequence, to_categorical
 
 
 class BaseSequence(Sequence):
@@ -54,11 +56,12 @@ class DataSequence(BaseSequence):
 
             try:
                 for j in range(X.shape[0]):
-                    spec_file[i+j,] = X[j]
-                    category[i+j,] = cat
+                    spec_file[i*X.shape[0] + j,] = X[j]
+                    category[i*X.shape[0] + j,] = cat
 
             except Exception as E:
-                print("\ncorrupt file: "+ID+"\n")
+                os.remove(ID)
+                print("\nremove corrupt file: " + ID + "\n")
                 continue
 
         X_stack = np.squeeze(np.stack((spec_file,) * 3, axis=-1))
@@ -74,10 +77,10 @@ class PredictSequence(BaseSequence):
 
             try:
                 for j in range(X.shape[0]):
-                    spec_file[i+j,] = X[j]
+                    spec_file[i*X.shape[0] + j,] = X[j]
 
             except Exception as E:
-                print("\ncorrupt file: "+ID+"\n")
+                print("\ncorrupt file: " + ID + "\n")
                 continue
 
         X_stack = np.squeeze(np.stack((spec_file,) * 3, axis=-1))

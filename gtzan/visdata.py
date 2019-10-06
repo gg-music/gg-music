@@ -8,8 +8,8 @@ def save_history(hist, save_dir):
     plt.figure(figsize=(15, 7))
 
     plt.subplot(1, 2, 1)
-    plt.plot(hist.history['acc'], label='train')
-    plt.plot(hist.history['val_acc'], label='validation')
+    plt.plot(hist.history['accuracy'], label='train')
+    plt.plot(hist.history['val_accuracy'], label='validation')
     plt.title('Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
