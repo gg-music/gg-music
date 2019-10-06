@@ -25,7 +25,7 @@ class BaseSequence(Sequence):
         return data
 
     def get_dim(self):
-        x = np.load(self.file_list[0])
+        x = np.load(self.file_list[0][0])
         return x.shape
 
     def get_batch_dim(self):
@@ -69,10 +69,16 @@ class PredictSequence(BaseSequence):
     def get_data(self, temp_file_list):
         spec_file = np.empty(self.batch_dim)
         for i, line in enumerate(temp_file_list):
-            ID = line
+            ID = line[0]
             X = np.load(ID)
-            for j in range(X.shape[0]):
-                spec_file[i+j,] = X[j]
+
+            try:
+                for j in range(X.shape[0]):
+                    spec_file[i+j,] = X[j]
+
+            except Exception as E:
+                print("\ncorrupt file: "+ID+"\n")
+                continue
 
         X_stack = np.squeeze(np.stack((spec_file,) * 3, axis=-1))
         return X_stack
