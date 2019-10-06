@@ -38,5 +38,5 @@ print(cm)
 acc = accuracy_score(y_val, y_pred)
 print('acc= ', acc)
 
-keys = OrderedDict(sorted(load_mapping().items(), key=lambda t: t[1])).keys()
-plot_confusion_matrix('/logs/cm.png', cm, keys, normalize=True)
+keys = OrderedDict(sorted(load_mapping(reverse=True).items(), key=lambda t: t[1])).keys()
+plot_confusion_matrix('logs/{}cm.png'.format(args.model), cm, keys, normalize=True)
