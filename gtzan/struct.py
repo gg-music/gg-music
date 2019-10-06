@@ -1,9 +1,11 @@
+import json
 import os
-import librosa
-import numpy as np
-import audioread
 from functools import partial
 from multiprocessing import Pool, cpu_count
+
+import audioread
+import librosa
+import numpy as np
 
 
 def batch(iterable, n=1):
@@ -39,10 +41,8 @@ def to_melspectrogram(songs, n_fft=1024, hop_length=512):
     return np.array(list(tsongs))
 
 
-def parallel_preprocessing(src_csv, output_dir, batch_size):
-    song_list, category = read_csv(src_csv)
-
-    par = partial(preprocessing, output_dir=output_dir, spec_format=to_melspectrogram)
+def parallel_preprocessing(song_list, output_dir, category=None, batch_size=10):
+    par = partial(preprocessing, category=category, output_dir=output_dir, spec_format=to_melspectrogram)
     pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(song_list, batch_size)):
@@ -52,7 +52,7 @@ def parallel_preprocessing(src_csv, output_dir, batch_size):
     pool.join()
 
 
-def preprocessing(batch_file_path, output_dir, spec_format):
+def preprocessing(batch_file_path, output_dir, spec_format, category):
     song_samples = 660000
     for file_path in batch_file_path:
         arr_specs = []
@@ -70,19 +70,47 @@ def preprocessing(batch_file_path, output_dir, spec_format):
 
         arr_specs.extend(specs)
 
-        file_name = os.path.basename(file_path).split('.')[0]
-        save_file = os.path.join(output_dir, '{}.npy'.format(file_name))
+        file_name = os.path.basename(file_path).split('.')[-2]
+
+        if not category:
+            category = os.path.dirname(file_path).split('/')[-1]
+
+        category_dir = os.path.join(output_dir, category)
+
+        if not os.path.isdir(category_dir):
+            os.mkdir(category_dir, mode=0o777)
+        save_file = os.path.join(category_dir, '{}.npy'.format(file_name))
+
         np.save(save_file, arr_specs)
         print('{}'.format(save_file))
 
 
-def read_csv(src_csv):
-    csv = []
-    with open(src_csv, 'r') as f:
-        header = f.readline().strip().split(',')
-        for line in f:
-            content = line.strip().split(',')
-            csv.append(content)
+def get_file_list(src_dir, catalog_offset=0):
+    input_path = []
+    category = []
+    for dir_path, subdir, filenames in os.walk(src_dir):
+        for f in filenames:
+            input_path.append(os.path.join(dir_path, f))
 
-    return csv
+            if catalog_offset:
+                reverse_mapping = load_mapping(reverse=True)
+                dir_array = dir_path.split('/')
+                cat = dir_array[catalog_offset]
+                category.append(reverse_mapping[cat])
 
+    if catalog_offset:
+        return input_path, category
+    else:
+        return input_path
+
+
+def load_mapping(reverse=False):
+    file = '/home/gtzan/category_label_mapping.json'
+    with open(file, 'r') as f:
+        mapping = json.load(f)
+
+    if reverse:
+        reverse_mapping = {v: k for k, v in mapping.items()}
+        return reverse_mapping
+    else:
+        return mapping

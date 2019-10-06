@@ -25,7 +25,7 @@ class BaseSequence(Sequence):
         return data
 
     def get_dim(self):
-        x = np.load(self.file_list[0][1])
+        x = np.load(self.file_list[0])
         return x.shape
 
     def get_batch_dim(self):
@@ -45,15 +45,22 @@ class BaseSequence(Sequence):
 
 class DataSequence(BaseSequence):
     def get_data(self, temp_file_list):
-        spec_file = np.empty(self.batch_dim)
-        category = np.empty((self.batch_size * self.dim[0]))
+        spec_file = np.zeros(self.batch_dim)
+        category = np.zeros((self.batch_size * self.dim[0]))
         for i, line in enumerate(temp_file_list):
-            cat = line[0]
-            ID = line[1]
+            ID = line[0]
+            cat = line[1]
             X = np.load(ID)
-            for j in range(X.shape[0]):
-                spec_file[i+j,] = X[j]
-                category[i+j,] = cat
+
+            try:
+                for j in range(X.shape[0]):
+                    spec_file[i+j,] = X[j]
+                    category[i+j,] = cat
+
+            except Exception as E:
+                print("\ncorrupt file: "+ID+"\n")
+                continue
+
         X_stack = np.squeeze(np.stack((spec_file,) * 3, axis=-1))
         return X_stack, category
 
