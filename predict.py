@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import argparse
+import os
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -14,6 +15,8 @@ from sklearn.metrics import confusion_matrix, accuracy_score
 parser = argparse.ArgumentParser(description='predict gtzan')
 parser.add_argument('-m', '--model', help='model', type=str, required=True)
 args = parser.parse_args()
+
+model_name = os.path.basename(args.model).split('.')[-2]
 
 X, y = get_file_list('/home/gtzan/ssd/gtzan_preprocessing', catalog_offset=-1)
 y_val = np.array(y).astype(int)
@@ -39,4 +42,4 @@ acc = accuracy_score(y_val, y_pred)
 print('acc= ', acc)
 
 keys = OrderedDict(sorted(load_mapping(reverse=True).items(), key=lambda t: t[1])).keys()
-plot_confusion_matrix('logs/{}cm.png'.format(args.model), cm, keys, normalize=True)
+plot_confusion_matrix('logs/{}cm.png'.format(model_name), cm, keys, normalize=True)

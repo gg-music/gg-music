@@ -1,6 +1,8 @@
+import os
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 # Plot and save keras trainning history
@@ -60,3 +62,21 @@ def plot_confusion_matrix(save_dir, cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.savefig(save_dir, format='png', bbox_inches='tight')
+
+
+def plot_mfcc(npy, output_dir=None):
+    song = np.load(npy)
+    song_path, song_name = os.path.split(npy)
+    song_path = song_path.split('/')
+    title = os.path.join(song_path[-2], song_path[-1], song_name)
+    save_dir = os.path.join(output_dir, song_name.split('.')[-2])
+
+    s = song[0]
+    s = s.reshape((128, 129))
+    ax = sns.heatmap(s, robust=True, cbar=False)
+    ax.set_title(title)
+    ax.invert_yaxis()
+    if output_dir:
+        plt.savefig(save_dir+'.png', format='png', bbox_inches='tight')
+    else:
+        plt.show()
