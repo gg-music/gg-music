@@ -7,7 +7,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from gtzan.cyclical_learning_rate import CyclicLR
 from sklearn.model_selection import train_test_split
 
-from gtzan.model import build_model
+from gtzan.classification_model import vgg16_model
 from gtzan.generator import DataSequence
 from gtzan.utils import get_file_list
 from gtzan.visdata import save_history
@@ -32,7 +32,7 @@ input_shape = train_generator.input_shape
 mirrored_strategy = tf.distribute.MirroredStrategy()
 
 with mirrored_strategy.scope():
-    cnn = build_model(input_shape, num_genres)
+    cnn = vgg16_model(input_shape, num_genres)
     cnn.compile(loss='sparse_categorical_crossentropy',
                 optimizer=Adam(),
                 metrics=['accuracy'])
