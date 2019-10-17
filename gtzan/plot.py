@@ -6,7 +6,7 @@ import seaborn as sns
 
 
 # Plot and save keras trainning history
-def save_history(hist, save_dir):
+def plot_save_history(hist, save_dir):
     plt.figure(figsize=(15, 7))
 
     plt.subplot(1, 2, 1)

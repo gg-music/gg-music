@@ -1,4 +1,5 @@
-from gtzan.utils import parallel_preprocessing, get_file_list, to_melspectrogram
+from gtzan.utils import parallel_preprocessing, get_file_list
+from gtzan.signal import to_melspectrogram
 import pandas as pd
 import os
 import argparse
