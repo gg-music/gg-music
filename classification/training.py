@@ -1,16 +1,15 @@
-import numpy as np
 from datetime import datetime
 
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from gtzan.cyclical_learning_rate import CyclicLR
+from gtzan.learning_rate.cyclical_lr import CyclicLR
 from sklearn.model_selection import train_test_split
 
-from gtzan.classification_model import vgg16_model
+from gtzan.model.classification_model import vgg16_model
 from gtzan.generator import DataSequence
 from gtzan.utils import get_file_list
-from gtzan.visdata import save_history
+from gtzan.plot import plot_save_history
 
 X, y = get_file_list('/home/gtzan/ssd/fma_balanced', catalog_offset=-2)
 
@@ -55,4 +54,4 @@ hist = cnn.fit(train_generator,
 cnn.save('model/vgg_model_{}.h5'.format(exec_time))
 print('save model', 'model/vgg_model_{}.h5'.format(exec_time))
 
-save_history(hist, 'logs/{}loss.png'.format(exec_time))
+plot_save_history(hist, 'logs/{}loss.png'.format(exec_time))

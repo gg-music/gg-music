@@ -1,4 +1,5 @@
-from gtzan.utils import get_file_list, parallel_preprocessing, to_melspectrogram
+from gtzan.utils import get_file_list, parallel_preprocessing
+from gtzan.signal import to_melspectrogram
 
 src_path = '/home/gtzan/data/gtzan'
 output_dir = '/home/gtzan/data/gtzan_preprocessing/'

@@ -1,15 +1,13 @@
-import numpy as np
 from datetime import datetime
 
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
-from gtzan.classification_model import vgg16_model
+from gtzan.model.classification_model import vgg16_model
 from gtzan.generator import DataSequence
 from gtzan.utils import get_file_list
-from gtzan.lr_finder import LRFinder
-from gtzan.visdata import save_history
+from gtzan.learning_rate.lr_finder import LRFinder
 
 exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
 

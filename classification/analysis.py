@@ -1,4 +1,4 @@
-from gtzan.visdata import plot_mfcc
+from gtzan.plot import plot_mfcc
 
 output_dir = "logs"
 

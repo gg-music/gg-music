@@ -6,7 +6,7 @@ import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from collections import OrderedDict
-from gtzan.visdata import plot_confusion_matrix
+from gtzan.plot import plot_confusion_matrix
 from gtzan.utils import get_file_list, load_mapping, pred_to_y
 from gtzan.generator import PredictSequence
 
