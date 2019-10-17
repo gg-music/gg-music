@@ -1,0 +1,10 @@
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/blues -o /home/gtzan/data/fma_preprocessing/blues
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/classical -o /home/gtzan/data/fma_preprocessing/classical
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/country -o /home/gtzan/data/fma_preprocessing/country
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/disco -o /home/gtzan/data/fma_preprocessing/disco
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/hiphop -o /home/gtzan/data/fma_preprocessing/hiphop
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/jazz -o /home/gtzan/data/fma_preprocessing/jazz
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/metal -o /home/gtzan/data/fma_preprocessing/metal
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/pop -o /home/gtzan/data/fma_preprocessing/pop
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/reggae -o /home/gtzan/data/fma_preprocessing/reggae
+python fma_preprocessing.py -c /home/gtzan/gtzan_genre/rock -o /home/gtzan/data/fma_preprocessing/rock

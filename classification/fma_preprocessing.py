@@ -1,4 +1,4 @@
-from gtzan.struct import parallel_preprocessing, get_file_list
+from gtzan.utils import parallel_preprocessing, get_file_list, to_melspectrogram
 import pandas as pd
 import os
 import argparse
@@ -16,4 +16,7 @@ csv_list = get_file_list(csv_dir)
 for csv in csv_list:
     file_list = pd.read_csv(csv, header=0)
     category = os.path.basename(csv).split('.')[-2]
-    parallel_preprocessing(file_list['path'], output_dir, category=category, batch_size=10)
+    parallel_preprocessing(file_list['path'], output_dir,
+                           category=category,
+                           spec_format=to_melspectrogram,
+                           batch_size=10, trim=30, split=0.1)

@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from collections import OrderedDict
 from gtzan.visdata import plot_confusion_matrix
-from gtzan.struct import get_file_list, load_mapping
+from gtzan.utils import get_file_list, load_mapping, pred_to_y
 from gtzan.generator import PredictSequence
 
 from sklearn.metrics import confusion_matrix, accuracy_score
@@ -30,10 +30,8 @@ pred = cnn.predict(predict_generator,
                    use_multiprocessing=True,
                    workers=5, verbose=1)
 
-preds = np.argmax(pred, axis=1)
-result = np.array(preds[:19000]).reshape((1000, 19))
-mode = stats.mode(result, axis=1)
-y_pred = np.array(mode[0]).reshape(1000, )
+y_pred = pred_to_y(pred, n_song=len(y),
+                   split_per_song=predict_generator.dim[0])
 
 cm = confusion_matrix(y_val, y_pred)
 print(cm)

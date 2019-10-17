@@ -27,3 +27,9 @@ def build_model(input_shape, num_genres, freezed_layers=5):
         layer.trainable = False
 
     return model
+
+
+if __name__ == '__main__':
+    model = build_model(input_shape=(128, 129, 3), num_genres=10)
+    model.summary()
+

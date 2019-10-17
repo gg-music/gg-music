@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 import audioread
 import librosa
 import numpy as np
+from scipy import stats
 
 
 def batch(iterable, n=1):
@@ -36,8 +37,30 @@ def to_melspectrogram(songs, n_fft=1024, hop_length=512):
     return np.array(list(tsongs))
 
 
-def parallel_preprocessing(song_list, output_dir, category=None, batch_size=10):
-    par = partial(preprocessing, category=category, output_dir=output_dir, spec_format=to_melspectrogram)
+def remove_hf(mag):
+    return mag[0:int(mag.shape[0] / 2), :]
+
+
+def to_stft(audio, nfft=1024, normalize=True, crop_hf=True):
+    window = np.hanning(nfft)
+    S = librosa.stft(audio, n_fft=nfft, hop_length=int(nfft / 2), window=window)
+    mag, phase = np.abs(S), np.angle(S)
+    if crop_hf:
+        mag = remove_hf(mag)
+    if normalize:
+        mag = 2 * mag / np.sum(window)
+    return mag, phase
+
+
+def parallel_preprocessing(song_list, output_dir,
+                           spec_format=None, category=None,
+                           batch_size=10, **kwargs):
+    par = partial(preprocessing,
+                  category=category,
+                  output_dir=output_dir,
+                  spec_format=spec_format,
+                  **kwargs)
+
     pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(song_list, batch_size)):
@@ -47,16 +70,25 @@ def parallel_preprocessing(song_list, output_dir, category=None, batch_size=10):
     pool.join()
 
 
-def preprocessing(batch_file_path, output_dir, spec_format, category):
-    song_samples = 660000
+def preprocessing(batch_file_path, output_dir,
+                  spec_format, category,
+                  trim=None, split=None):
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir, mode=0o777)
+
     for file_path in batch_file_path:
         arr_specs = []
         try:
             signal, sr = librosa.load(file_path)
-            signal = signal[:song_samples]
 
-            signals = splitsongs(signal)
-            specs = spec_format(signals)
+            if trim:
+                trim_length = sr * trim
+                signal = signal[:trim_length]
+
+            if split:
+                signal = splitsongs(signal, window=split)
+
+            specs = spec_format(signal)
 
         except ValueError:
             continue
@@ -88,9 +120,9 @@ def get_file_list(src_dir, catalog_offset=0):
             input_path.append(os.path.join(dir_path, f))
 
             if catalog_offset:
-                reverse_mapping = load_mapping(reverse=True)
                 dir_array = dir_path.split('/')
                 cat = dir_array[catalog_offset]
+                reverse_mapping = load_mapping(reverse=True)
                 category.append(reverse_mapping[cat])
 
     if catalog_offset:
@@ -109,3 +141,13 @@ def load_mapping(reverse=False):
         return reverse_mapping
     else:
         return mapping
+
+
+def pred_to_y(pred, n_song, split_per_song):
+    total = n_song * split_per_song
+    max_prob = np.argmax(pred, axis=1)
+    group_by_song = np.array(max_prob[:total]).reshape((n_song, split_per_song))
+    song_mode = stats.mode(group_by_song, axis=1)
+    y_pred = np.array(song_mode[0]).reshape(n_song, )
+
+    return y_pred

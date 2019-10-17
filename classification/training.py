@@ -9,10 +9,11 @@ from sklearn.model_selection import train_test_split
 
 from gtzan.model import build_model
 from gtzan.generator import DataSequence
-from gtzan.struct import get_file_list
+from gtzan.utils import get_file_list
 from gtzan.visdata import save_history
 
 X, y = get_file_list('/home/gtzan/ssd/fma_balanced', catalog_offset=-2)
+
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
@@ -38,10 +39,10 @@ with mirrored_strategy.scope():
 
 checkpoint = ModelCheckpoint('model/checkpoint_model_{}.h5'.format(exec_time),
                              monitor='val_loss', save_best_only=True, verbose=1)
-earlystop = EarlyStopping(monitor='val_loss', patience=10, verbose=1)
+earlystop = EarlyStopping(monitor='val_loss', patience=20, verbose=1)
 
-clr = CyclicLR(base_lr=1e-6, max_lr=1e-4,
-               step_size=len(train_generator) * 2, mode='exp_range')
+clr = CyclicLR(base_lr=1e-5, max_lr=3e-4,
+               step_size=len(train_generator) * 2, mode='triangular2')
 
 hist = cnn.fit(train_generator,
                validation_data=test_generator,
