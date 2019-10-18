@@ -78,6 +78,7 @@ def plot_mfcc(npy, output_dir=None):
     ax.invert_yaxis()
     if output_dir:
         plt.savefig(save_dir + '.png', format='png', bbox_inches='tight')
+        plt.close()
     else:
         plt.show()
 
@@ -94,5 +95,6 @@ def plot_stft(npy, output_dir=None):
     if output_dir:
         save_dir = os.path.join(output_dir, song_name.split('.')[-2])
         plt.savefig(save_dir + '.png', format='png', bbox_inches='tight')
+        plt.close()
     else:
         plt.show()
