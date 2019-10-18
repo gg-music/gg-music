@@ -13,7 +13,7 @@ from tensorflow.keras.models import load_model
 from collections import OrderedDict
 from gtzan.plot import plot_confusion_matrix
 from gtzan.utils import get_file_list, load_mapping, pred_to_y
-from gtzan.generator import PredictSequence
+from gtzan.data_generator import PredictSequence
 
 from sklearn.metrics import confusion_matrix, accuracy_score
 

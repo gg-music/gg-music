@@ -12,8 +12,8 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from gtzan.learning_rate.cyclical_lr import CyclicLR
 from sklearn.model_selection import train_test_split
 
-from gtzan.model.classification_model import vgg16_model
-from gtzan.generator import DataSequence
+from gtzan.classification_model.vgg_model import vgg16_model
+from gtzan.data_generator import DataSequence
 from gtzan.utils import get_file_list
 from gtzan.plot import plot_save_history
 

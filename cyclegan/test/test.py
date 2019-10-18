@@ -4,13 +4,18 @@ import os
 workspace = os.path.dirname(os.getcwd())
 sys.path.append(workspace)
 
-from segmentation_models.nestnet import Nestnet
+from gtzan.segmentation_models import Nestnet
 from discrminator import get_model as Discrminator
-from gtzan.utils import unet_padding_size, crop, reshape
+from gtzan.utils import unet_padding_size, crop
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import tensorflow as tf
+
+
+def reshape(img):
+    img = tf.reshape(img, shape=(1, img.shape[0], img.shape[1], 1))
+    return img
 
 
 inp = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-006.npy')

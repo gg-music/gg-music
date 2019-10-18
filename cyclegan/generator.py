@@ -1,28 +1,18 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2DTranspose, Input, ZeroPadding2D, MaxPooling2D, Conv2D, Dropout, concatenate, Cropping2D, BatchNormalization, LeakyReLU
+from tensorflow.keras.layers import Conv2DTranspose, Input, ZeroPadding2D, MaxPooling2D, Conv2D, Dropout, concatenate, \
+    Cropping2D, BatchNormalization, LeakyReLU
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 import numpy as np
+
+from gtzan.utils import unet_padding_size
 
 ACTIVATION_FN = 'relu'
 DROPOUT_RATE = 0.5
 BN_AXIS = 3
 
 
-def unet_padding_size(length, pool_size, layers=4):
-    output = length
-    for _ in range(layers):
-        output = int(np.ceil(output / pool_size))
-
-    padding = output * (pool_size**layers) - length
-    lpad = int(np.ceil(padding / 2))
-    rpad = int(np.floor(padding / 2))
-
-    return lpad, rpad
-
-
 def standard_unit(input_tensor, stage, nb_filter, kernel_size=3):
-
     x = Conv2D(nb_filter, (kernel_size, kernel_size),
                name='conv' + stage + '_1',
                kernel_initializer='he_normal',
@@ -102,5 +92,5 @@ def get_model(img_rows, img_cols):
 if __name__ == '__main__':
     inp = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-000.npy')
     inp = inp.reshape(256, 431, 1)
-    model = get_model(inp.shape[0], inp.shape[1], training=False)
+    model = get_model(inp.shape[0], inp.shape[1])
     print(model.summary())

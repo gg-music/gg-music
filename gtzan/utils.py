@@ -3,7 +3,6 @@ import os
 from functools import partial
 from multiprocessing import Pool, cpu_count
 
-import tensorflow as tf
 import audioread
 import librosa
 import numpy as np
@@ -136,8 +135,3 @@ def crop(image, crop_size):
     rpad = crop_size[1][1]
     image = image[:, lpad:-rpad]
     return image
-
-
-def reshape(img):
-    img = tf.reshape(img, shape=(1, img.shape[0], img.shape[1], 1))
-    return img

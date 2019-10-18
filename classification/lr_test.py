@@ -10,8 +10,8 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
-from gtzan.model.classification_model import vgg16_model
-from gtzan.generator import DataSequence
+from gtzan.classification_model.vgg_model import vgg16_model
+from gtzan.data_generator import DataSequence
 from gtzan.utils import get_file_list
 from gtzan.learning_rate.lr_finder import LRFinder
 
