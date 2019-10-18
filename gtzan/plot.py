@@ -80,3 +80,19 @@ def plot_mfcc(npy, output_dir=None):
         plt.savefig(save_dir+'.png', format='png', bbox_inches='tight')
     else:
         plt.show()
+
+def plot_stft(npy, output_dir=None):
+    song = np.load(npy)
+    song_path, song_name = os.path.split(npy)
+    song_path = song_path.split('/')
+    title = os.path.join(song_path[-2], song_path[-1], song_name)
+
+
+    ax = sns.heatmap(song, robust=True, cbar=False)
+    ax.set_title(title)
+    ax.invert_yaxis()
+    if output_dir:
+        save_dir = os.path.join(output_dir, song_name.split('.')[-2])
+        plt.savefig(save_dir+'.png', format='png', bbox_inches='tight')
+    else:
+        plt.show()

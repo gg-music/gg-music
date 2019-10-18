@@ -22,7 +22,7 @@ def to_stft(audio, nfft=1024, normalize=True, crop_hf=True):
         mag = remove_hf(mag)
     if normalize:
         mag = 2 * mag / np.sum(window)
-    return mag, phase
+    return mag
 
 
 def splitsongs(X, window=0.1, overlap=0.5):

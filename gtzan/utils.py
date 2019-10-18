@@ -38,6 +38,7 @@ def parallel_preprocessing(song_list, output_dir,
 def preprocessing(batch_file_path, output_dir,
                   spec_format, category,
                   trim=None, split=None):
+
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir, mode=0o777)
 
