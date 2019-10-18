@@ -26,14 +26,15 @@ from .blocks import basic_identity_block
 from .blocks import conv_block as usual_conv_block
 from .blocks import identity_block as usual_identity_block
 
-def build_resnet(
-     repetitions=(2, 2, 2, 2),
-     include_top=True,
-     input_tensor=None,
-     input_shape=None,
-     classes=1000,
-     block_type='usual'):
 
+def build_resnet(
+    repetitions=(2, 2, 2, 2),
+    include_top=True,
+    input_tensor=None,
+    input_shape=None,
+    classes=1000,
+    block_type='usual',
+    name=None):
     """
     TODO
     """
@@ -79,7 +80,7 @@ def build_resnet(
     for stage, rep in enumerate(repetitions):
         for block in range(rep):
 
-            filters = init_filters * (2**stage)
+            filters = init_filters * (2 ** stage)
 
             # first block of first stage without strides because we have maxpooling before
             if block == 0 and stage == 0:
@@ -107,6 +108,6 @@ def build_resnet(
         inputs = img_input
 
     # Create model.
-    model = Model(inputs, x)
+    model = Model(inputs, x, name=name)
 
     return model
