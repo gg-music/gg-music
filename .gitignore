@@ -240,3 +240,4 @@ dmypy.json
 *.png
 *.jpg
 *.jpeg
+*.nfs*
