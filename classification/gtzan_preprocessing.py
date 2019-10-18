@@ -1,3 +1,9 @@
+import sys
+import os
+
+workspace = os.path.dirname(os.getcwd())
+sys.path.append(workspace)
+
 from gtzan.utils import get_file_list, parallel_preprocessing
 from gtzan.signal import to_melspectrogram
 

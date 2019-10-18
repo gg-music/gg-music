@@ -1,7 +1,12 @@
+import sys
+import os
+
+workspace = os.path.dirname(os.getcwd())
+sys.path.append(workspace)
+
 from gtzan.utils import parallel_preprocessing, get_file_list
 from gtzan.signal import to_melspectrogram
 import pandas as pd
-import os
 import argparse
 
 parser = argparse.ArgumentParser(description='fma mp3 to npy')

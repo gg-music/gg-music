@@ -1,7 +1,12 @@
+import sys
+import os
+
+workspace = os.path.dirname(os.getcwd())
+sys.path.append(workspace)
+
 import numpy as np
 from scipy import stats
 import argparse
-import os
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model

@@ -1,3 +1,9 @@
+import sys
+import os
+
+workspace = os.path.dirname(os.getcwd())
+sys.path.append(workspace)
+
 from gtzan.plot import plot_stft
 
 output_dir = "../logs"

@@ -1,3 +1,9 @@
+import sys
+import os
+
+workspace = os.path.dirname(os.getcwd())
+sys.path.append(workspace)
+
 from datetime import datetime
 
 import tensorflow as tf
