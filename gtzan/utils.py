@@ -3,6 +3,7 @@ import os
 from functools import partial
 from multiprocessing import Pool, cpu_count
 
+import tensorflow as tf
 import audioread
 import librosa
 import numpy as np
@@ -38,7 +39,6 @@ def parallel_preprocessing(song_list, output_dir,
 def preprocessing(batch_file_path, output_dir,
                   spec_format, category,
                   trim=None, split=None):
-
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir, mode=0o777)
 
@@ -117,3 +117,27 @@ def pred_to_y(pred, n_song, split_per_song):
     y_pred = np.array(song_mode[0]).reshape(n_song, )
 
     return y_pred
+
+
+def unet_padding_size(length, pool_size, layers=4):
+    output = length
+    for _ in range(layers):
+        output = int(np.ceil(output / pool_size))
+
+    padding = output * (pool_size ** layers) - length
+    lpad = int(np.ceil(padding / 2))
+    rpad = int(np.floor(padding / 2))
+
+    return lpad, rpad
+
+
+def crop(image, crop_size):
+    lpad = crop_size[1][0]
+    rpad = crop_size[1][1]
+    image = image[:, lpad:-rpad]
+    return image
+
+
+def reshape(img):
+    img = tf.reshape(img, shape=(1, img.shape[0], img.shape[1], 1))
+    return img

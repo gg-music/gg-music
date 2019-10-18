@@ -32,7 +32,7 @@ def standard_unit(input_tensor, stage, nb_filter, kernel_size=3):
 
 def get_model(img_rows, img_cols):
     initializer = tf.random_normal_initializer(0., 0.02)
-    nb_filter = [64, 128, 256]
+    nb_filter = [64, 128, 256, 512]
     inp = Input(shape=[img_rows, img_cols, 1], name='input_image')
     tar = Input(shape=[img_rows, img_cols, 1], name='target_image')
 
@@ -50,7 +50,10 @@ def get_model(img_rows, img_cols):
     conv3_1 = standard_unit(pool2, stage='31', nb_filter=nb_filter[2])
     pool3 = MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv3_1)
 
-    zero_pad1 = ZeroPadding2D()(pool3)
+    conv4_1 = standard_unit(pool2, stage='31', nb_filter=nb_filter[3])
+    pool4 = MaxPooling2D((2, 2), strides=(2, 2), name='pool3')(conv4_1)
+
+    zero_pad1 = ZeroPadding2D()(pool4)
 
     conv = Conv2D(512,
                   4,
