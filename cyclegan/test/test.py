@@ -4,8 +4,8 @@ import os
 workspace = os.path.dirname(os.getcwd())
 sys.path.append(workspace)
 
-from gtzan.segmentation_models import Nestnet
-from discrminator import get_model as Discriminator
+from gtzan.model.generator import get_model as Generator
+from gtzan.model.discrminator import get_model as Discriminator
 from gtzan.utils import unet_padding_size, crop
 from gtzan.plot import plot_heat_map
 import numpy as np
@@ -19,8 +19,8 @@ def reshape(img):
     return img
 
 
-inp = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-006.npy')
-tar = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-009.npy')
+inp = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-046.npy')
+tar = np.load('/home/gtzan/data/gan_preprocessing/guitar1/guitar1-049.npy')
 
 PAD_SIZE = ((0, 0), unet_padding_size(inp.shape[1], pool_size=2, layers=8))
 IPT_SHAPE = [inp.shape[0], inp.shape[1] + PAD_SIZE[1][0] + PAD_SIZE[1][1]]
@@ -28,11 +28,7 @@ IPT_SHAPE = [inp.shape[0], inp.shape[1] + PAD_SIZE[1][0] + PAD_SIZE[1][1]]
 pic = np.pad(inp, PAD_SIZE)
 pic = np.repeat(pic.reshape((1, IPT_SHAPE[0], IPT_SHAPE[1], 1)), 3, axis=3)
 
-g_model = Nestnet(backbone_name='resnet50',
-                  input_shape=(IPT_SHAPE[0], IPT_SHAPE[1], 3),
-                  decoder_filters=(512, 512, 256, 128, 64),
-                  activation='tanh')
-
+g_model = Generator(IPT_SHAPE[0], IPT_SHAPE[1])
 d_model = Discriminator(IPT_SHAPE[0], IPT_SHAPE[1])
 
 g_out = g_model(pic, training=False)

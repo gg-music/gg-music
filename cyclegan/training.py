@@ -3,10 +3,11 @@ import time
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
 from gtzan.data_generator import GanSequence
 from gtzan.utils import get_file_list, unet_padding_size, crop
-from gtzan.segmentation_models import Nestnet as Generator
-from gtzan.classification_model.discrminator import get_model as Discriminator
+from gtzan.segmentation_models.unet import Unet as Generator
+from gtzan.model.pix2pix import discriminator as Discriminator
 from gtzan.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from gtzan.plot import plot_heat_map
 
@@ -22,25 +23,30 @@ PAD_SIZE = ((0, 0), unet_padding_size(guitar_data_gen.input_shape[1], pool_size=
 IPT_SHAPE = [guitar_data_gen.input_shape[0], guitar_data_gen.input_shape[1] + PAD_SIZE[1][0] + PAD_SIZE[1][1]]
 
 generator_g = Generator(backbone_name='vgg16',
-                        input_shape=(IPT_SHAPE[0], IPT_SHAPE[1], 3),
+                        input_shape=(None, None, 3),
                         decoder_filters=(512, 512, 256, 128, 64),
+                        classes=3,
                         activation='tanh')
 
 generator_f = Generator(backbone_name='vgg16',
-                        input_shape=(IPT_SHAPE[0], IPT_SHAPE[1], 3),
+                        input_shape=(None, None, 3),
                         decoder_filters=(512, 512, 256, 128, 64),
+                        classes=3,
                         activation='tanh')
 
-discriminator_x = Discriminator(IPT_SHAPE[0], IPT_SHAPE[1])
-discriminator_y = Discriminator(IPT_SHAPE[0], IPT_SHAPE[1])
+# generator_g = Generator(3, norm_type='instancenorm')
+# generator_f = Generator(3, norm_type='instancenorm')
 
-generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+discriminator_x = Discriminator(norm_type='instancenorm', target=False)
+discriminator_y = Discriminator(norm_type='instancenorm', target=False)
 
-discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+generator_g_optimizer = Adam(2e-4, beta_1=0.5)
+generator_f_optimizer = Adam(2e-4, beta_1=0.5)
 
-checkpoint_path = "./checkpoints/train"
+discriminator_x_optimizer = Adam(2e-4, beta_1=0.5)
+discriminator_y_optimizer = Adam(2e-4, beta_1=0.5)
+
+checkpoint_path = "/home/gtzan/jimmy/model"
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -61,7 +67,7 @@ if ckpt_manager.latest_checkpoint:
 
 def generate_images(model, test_input):
     prediction = model(test_input)
-    plot_heat_map(prediction[0], 'generated_image')
+    plot_heat_map(prediction[0])
 
 
 @tf.function
@@ -69,9 +75,9 @@ def train_step(real_x, real_y):
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:
+        print('tape')
         # Generator G translates X -> Y
         # Generator F translates Y -> X.
-
         fake_y = generator_g(real_x, training=True)
         cycled_x = generator_f(fake_y, training=True)
 
@@ -140,7 +146,7 @@ for epoch in range(EPOCHS):
             print('.', end='')
         n += 1
 
-    generate_images(generator_g, piano_data_gen[0])
+        generate_images(generator_g, piano_data_gen[0])
 
     if (epoch + 1) % 5 == 0:
         ckpt_save_path = ckpt_manager.save()

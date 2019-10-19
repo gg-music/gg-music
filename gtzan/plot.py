@@ -100,9 +100,8 @@ def plot_stft(npy, output_dir=None):
         plt.show()
 
 
-def plot_heat_map(img, name):
+def plot_heat_map(img):
+    img = img[:, :, 0]
     ax = sns.heatmap(img, robust=True, cbar=True)
-    ax.set_title(name)
     ax.invert_yaxis()
-    plt.savefig('{}.png'.format(name), format='png', bbox_inches='tight')
-    plt.close()
+    plt.show()
