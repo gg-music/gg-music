@@ -19,9 +19,6 @@ piano = get_file_list('/home/gtzan/data/gan_preprocessing/piano1')
 guitar_data_gen = GanSequence(guitar, batch_size=1, shuffle=False)
 piano_data_gen = GanSequence(piano, batch_size=1, shuffle=False)
 
-PAD_SIZE = ((0, 0), unet_padding_size(guitar_data_gen.input_shape[1], pool_size=2, layers=8))
-IPT_SHAPE = [guitar_data_gen.input_shape[0], guitar_data_gen.input_shape[1] + PAD_SIZE[1][0] + PAD_SIZE[1][1]]
-
 generator_g = Generator(backbone_name='vgg16',
                         input_shape=(None, None, 3),
                         decoder_filters=(512, 512, 256, 128, 64),
@@ -60,9 +57,9 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
 ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 
 # if a checkpoint exists, restore the latest checkpoint.
-if ckpt_manager.latest_checkpoint:
-    ckpt.restore(ckpt_manager.latest_checkpoint)
-    print('Latest checkpoint restored!!')
+# if ckpt_manager.latest_checkpoint:
+#     ckpt.restore(ckpt_manager.latest_checkpoint)
+#     print('Latest checkpoint restored!!')
 
 
 def generate_images(model, test_input):
@@ -148,10 +145,10 @@ for epoch in range(EPOCHS):
 
         generate_images(generator_g, piano_data_gen[0])
 
-    if (epoch + 1) % 5 == 0:
-        ckpt_save_path = ckpt_manager.save()
-        print('Saving checkpoint for epoch {} at {}'.format(
-            epoch + 1, ckpt_save_path))
+    ckpt_save_path = ckpt_manager.save()
+
+    print('Saving checkpoint for epoch {} at {}'.format(
+        epoch + 1, ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))

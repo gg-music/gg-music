@@ -93,7 +93,7 @@ class GanSequence(Sequence):
     def __init__(self, file_list, batch_size=32, shuffle=False):
         self.file_list = file_list
         self.dim = self.get_dim()
-        self.pad_size = ((0, 0), unet_padding_size(self.dim[1], pool_size=2, layers=8))
+        self.pad_size = ((32, 32), unet_padding_size(self.dim[1], pool_size=2, layers=8))
         self.batch_size = batch_size
         self.input_shape = self.get_input_shape()
         self.batch_dim = self.get_batch_dim()
@@ -118,7 +118,9 @@ class GanSequence(Sequence):
         return self.batch_size, self.input_shape[0], self.input_shape[1], 3
 
     def get_input_shape(self):
-        return self.dim[0], self.dim[1] + self.pad_size[1][0] + self.pad_size[1][1], 3
+        return (self.dim[0] + self.pad_size[0][0] + self.pad_size[0][1],
+                self.dim[1] + self.pad_size[1][0] + self.pad_size[1][1],
+                3)
 
     def on_epoch_end(self):
         if self.shuffle:

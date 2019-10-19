@@ -101,7 +101,7 @@ def plot_stft(npy, output_dir=None):
 
 
 def plot_heat_map(img):
-    img = img[:, :, 0]
-    ax = sns.heatmap(img, robust=True, cbar=True)
+    img = np.abs(img[:, :, 0])
+    ax = sns.heatmap(img, vmin=0, vmax=1)
     ax.invert_yaxis()
     plt.show()
