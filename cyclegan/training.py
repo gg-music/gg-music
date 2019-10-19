@@ -1,3 +1,39 @@
+from datetime import datetime
+import time
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+from gtzan.data_generator import GanSequence
+from gtzan.utils import get_file_list, unet_padding_size, crop
+from gtzan.segmentation_models import Nestnet as Generator
+from gtzan.classification_model.discrminator import get_model as Discriminator
+from gtzan.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
+from gtzan.plot import plot_heat_map
+
+exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
+
+guitar = get_file_list('/home/gtzan/data/gan_preprocessing/guitar1')
+piano = get_file_list('/home/gtzan/data/gan_preprocessing/piano1')
+
+guitar_data_gen = GanSequence(guitar, batch_size=1, shuffle=False)
+piano_data_gen = GanSequence(piano, batch_size=1, shuffle=False)
+
+PAD_SIZE = ((0, 0), unet_padding_size(guitar_data_gen.input_shape[1], pool_size=2, layers=8))
+IPT_SHAPE = [guitar_data_gen.input_shape[0], guitar_data_gen.input_shape[1] + PAD_SIZE[1][0] + PAD_SIZE[1][1]]
+
+generator_g = Generator(backbone_name='vgg16',
+                        input_shape=(IPT_SHAPE[0], IPT_SHAPE[1], 3),
+                        decoder_filters=(512, 512, 256, 128, 64),
+                        activation='tanh')
+
+generator_f = Generator(backbone_name='vgg16',
+                        input_shape=(IPT_SHAPE[0], IPT_SHAPE[1], 3),
+                        decoder_filters=(512, 512, 256, 128, 64),
+                        activation='tanh')
+
+discriminator_x = Discriminator(IPT_SHAPE[0], IPT_SHAPE[1])
+discriminator_y = Discriminator(IPT_SHAPE[0], IPT_SHAPE[1])
+
 generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
@@ -22,24 +58,10 @@ if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
     print('Latest checkpoint restored!!')
 
-    EPOCHS = 40
-
 
 def generate_images(model, test_input):
     prediction = model(test_input)
-
-    plt.figure(figsize=(12, 12))
-
-    display_list = [test_input[0], prediction[0]]
-    title = ['Input Image', 'Predicted Image']
-
-    for i in range(2):
-        plt.subplot(1, 2, i + 1)
-        plt.title(title[i])
-        # getting the pixel values between [0, 1] to plot it.
-        plt.imshow(display_list[i] * 0.5 + 0.5)
-        plt.axis('off')
-    plt.show()
+    plot_heat_map(prediction[0], 'generated_image')
 
 
 @tf.function
@@ -107,20 +129,18 @@ def train_step(real_x, real_y):
         zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
 
+EPOCHS = 40
 for epoch in range(EPOCHS):
     start = time.time()
 
     n = 0
-    for image_x, image_y in tf.data.Dataset.zip((train_horses, train_zebras)):
+    for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
         train_step(image_x, image_y)
         if n % 10 == 0:
             print('.', end='')
         n += 1
 
-    clear_output(wait=True)
-    # Using a consistent image (sample_horse) so that the progress of the model
-    # is clearly visible.
-    generate_images(generator_g, sample_horse)
+    generate_images(generator_g, piano_data_gen[0])
 
     if (epoch + 1) % 5 == 0:
         ckpt_save_path = ckpt_manager.save()
