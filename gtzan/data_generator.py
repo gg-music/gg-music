@@ -4,6 +4,7 @@ import math
 import os
 import tensorflow as tf
 from tensorflow.keras.utils import Sequence, to_categorical
+from librosa.util import normalize
 
 from gtzan.utils import unet_padding_size
 
@@ -134,7 +135,12 @@ class GanSequence(Sequence):
     def get_data(self, temp_file_list):
         for i, ID in enumerate(temp_file_list):
             X = np.load(ID)
+            if np.max(X) == 0:
+                os.remove(ID)
+                print("\nremove zero file: " + ID + "\n")
+            X = normalize(X)
             X = np.pad(X, self.pad_size)
             X = np.repeat(X.reshape((self.input_shape[0], self.input_shape[1], 1)), 3, axis=2)
             X = X[np.newaxis, :]
+
         return X
