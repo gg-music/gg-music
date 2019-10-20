@@ -49,16 +49,33 @@ def write_audio(filename, audio, sr=44100):
     librosa.output.write_wav(filename, audio, sr, norm=True)
 
 
-def join_magnitude_slices(mag_sliced, target_shape, crop_size):
+def join_magnitude_slices(mag_sliced, target_shape, pad_size):
     mag = np.zeros(
         (mag_sliced.shape[1], mag_sliced.shape[0] * mag_sliced.shape[2]))
+    print('before', mag.shape)
     for i in range(mag_sliced.shape[0]):
         mag[:, (i) * mag_sliced.shape[2]:(i + 1) *
-            mag_sliced.shape[2]] = mag_sliced[i, :, :, 0]
-    mag = mag[crop_size[0][0]:target_shape[0] -
-              crop_size[0][1], crop_size[1][0]:target_shape[1] -
-              crop_size[1][1]]
+            mag_sliced.shape[2]] = mag_sliced[i, :, :, 1]
+    print('progressing', mag.shape)
+    # mag = mag[pad_size[1][0]:target_shape[0] -
+    #   pad_size[1][1], pad_size[2][0]:target_shape[1] - pad_size[2][1]]
+    mag = mag[0:target_shape[0], 0:target_shape[1]]
+
+    print('after', mag.shape)
     return mag
+
+
+def unpad_to_raw(padded, pad_size):
+    axis1_dim = padded.shape[1] - np.sum(pad_size[1])
+    axis2_dim = padded.shape[2] - np.sum(pad_size[2])
+    x = np.zeros((axis1_dim, axis2_dim))
+    for i in range(padded.shape[0]):
+        x = padded[i, pad_size[1][0]:padded.shape[1] -
+                   pad_size[1][1], pad_size[2][0]:padded.shape[2] -
+                   pad_size[2][1], 1]
+    unpad = np.repeat(x.reshape((axis1_dim, axis2_dim, 1)), 3, axis=2)
+    unpad = unpad[np.newaxis, :]
+    return unpad
 
 
 def db_to_amplitude(mag_db, amin=1 / (2**16), normalize=True):

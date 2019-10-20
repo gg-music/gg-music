@@ -10,6 +10,7 @@ from gtzan.utils import unet_padding_size
 
 
 class BaseSequence(Sequence):
+
     def __init__(self, file_list, batch_size=32, shuffle=False):
         self.file_list = file_list
         self.dim = self.get_dim()
@@ -24,7 +25,8 @@ class BaseSequence(Sequence):
         return math.ceil(len(self.file_list) / self.batch_size)
 
     def __getitem__(self, index):
-        indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
+        indexes = self.indexes[index * self.batch_size:(index + 1) *
+                               self.batch_size]
         temp_file_list = [self.file_list[k] for k in indexes]
         data = self.get_data(temp_file_list)
         return data
@@ -34,7 +36,8 @@ class BaseSequence(Sequence):
         return x.shape
 
     def get_batch_dim(self):
-        return self.batch_size * self.dim[0], self.dim[1], self.dim[2], self.dim[3]
+        return self.batch_size * self.dim[0], self.dim[1], self.dim[
+            2], self.dim[3]
 
     def get_input_shape(self):
         return self.dim[1], self.dim[2], 3
@@ -49,6 +52,7 @@ class BaseSequence(Sequence):
 
 
 class DataSequence(BaseSequence):
+
     def get_data(self, temp_file_list):
         spec_file = np.zeros(self.batch_dim)
         category = np.zeros((self.batch_size * self.dim[0]))
@@ -72,6 +76,7 @@ class DataSequence(BaseSequence):
 
 
 class PredictSequence(BaseSequence):
+
     def get_data(self, temp_file_list):
         spec_file = np.empty(self.batch_dim)
         for i, line in enumerate(temp_file_list):
@@ -91,10 +96,12 @@ class PredictSequence(BaseSequence):
 
 
 class GanSequence(Sequence):
+
     def __init__(self, file_list, batch_size=32, shuffle=False):
         self.file_list = file_list
         self.dim = self.get_dim()
-        self.pad_size = ((32, 32), unet_padding_size(self.dim[1], pool_size=2, layers=8))
+        self.pad_size = ((32, 32),
+                         unet_padding_size(self.dim[1], pool_size=2, layers=8))
         self.batch_size = batch_size
         self.input_shape = self.get_input_shape()
         self.batch_dim = self.get_batch_dim()
@@ -106,7 +113,8 @@ class GanSequence(Sequence):
         return math.ceil(len(self.file_list) / self.batch_size)
 
     def __getitem__(self, index):
-        indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
+        indexes = self.indexes[index * self.batch_size:(index + 1) *
+                               self.batch_size]
         temp_file_list = [self.file_list[k] for k in indexes]
         data = self.get_data(temp_file_list)
         return data
@@ -120,8 +128,7 @@ class GanSequence(Sequence):
 
     def get_input_shape(self):
         return (self.dim[0] + self.pad_size[0][0] + self.pad_size[0][1],
-                self.dim[1] + self.pad_size[1][0] + self.pad_size[1][1],
-                3)
+                self.dim[1] + self.pad_size[1][0] + self.pad_size[1][1], 3)
 
     def on_epoch_end(self):
         if self.shuffle:
@@ -140,7 +147,10 @@ class GanSequence(Sequence):
                 print("\nremove zero file: " + ID + "\n")
             X = normalize(X)
             X = np.pad(X, self.pad_size)
-            X = np.repeat(X.reshape((self.input_shape[0], self.input_shape[1], 1)), 3, axis=2)
+            X = np.repeat(X.reshape(
+                (self.input_shape[0], self.input_shape[1], 1)),
+                          3,
+                          axis=2)
             X = X[np.newaxis, :]
 
         return X
