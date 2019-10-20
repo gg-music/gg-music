@@ -7,6 +7,7 @@ from tensorflow.keras.utils import Sequence, to_categorical
 from librosa.util import normalize
 
 from gtzan.utils import unet_padding_size
+from gtzan.signal import amplitude_to_db, slice_magnitude
 
 
 class BaseSequence(Sequence):
@@ -141,12 +142,13 @@ class GanSequence(Sequence):
 
     def get_data(self, temp_file_list):
         for i, ID in enumerate(temp_file_list):
-            X = np.load(ID)
-            if np.max(X) == 0:
+            mag = np.load(ID)
+            if np.max(mag) == 0:
                 os.remove(ID)
                 print("\nremove zero file: " + ID + "\n")
-            X = normalize(X)
-            X = np.pad(X, self.pad_size)
+            mag_db = amplitude_to_db(mag)
+            mag_db = (mag_db * 2) - 1
+            X = np.pad(mag_db, self.pad_size)
             X = np.repeat(X.reshape(
                 (self.input_shape[0], self.input_shape[1], 1)),
                           3,

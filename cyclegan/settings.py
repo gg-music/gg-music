@@ -1,6 +1,8 @@
 MUSIC_NPY_PATH = {
-    'guitar': '/home/gtzan/data/gan_preprocessing/guitar1',
-    'piano': '/home/gtzan/data/gan_preprocessing/piano1'
+    'guitar1': '/home/gtzan/data/gan_preprocessing/guitar1',
+    'guitar2': '/home/gtzan/data/gan_preprocessing/guitar1',
+    'piano1': '/home/gtzan/data/gan_preprocessing/piano1',
+    'piano2': '/home/gtzan/data/gan_preprocessing/piano1'
 }
 MUSIC_SRC_PATH = {
     'from': '/home/gtzan/data/gan/wav/sounds',

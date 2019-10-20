@@ -22,4 +22,4 @@ cyc = ['/home/gtzan/data/gan_preprocessing/piano1/piano1-090.npy',
 
 for s in cyc:
     data = np.load(s)
-    plot_stft(s, output_dir)
+    plot_stft(s)

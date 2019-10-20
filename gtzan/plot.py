@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from gtzan import signal
 
 
 # Plot and save keras trainning history
@@ -88,8 +89,8 @@ def plot_stft(npy, output_dir=None):
     song_path, song_name = os.path.split(npy)
     song_path = song_path.split('/')
     title = os.path.join(song_path[-2], song_path[-1], song_name)
-
-    ax = sns.heatmap(song, robust=True, cbar=False)
+    song = signal.amplitude_to_db(song)
+    ax = sns.heatmap(song, vmin=0, vmax=0.5, cbar=False)
     ax.set_title(title)
     ax.invert_yaxis()
     if output_dir:
@@ -101,7 +102,9 @@ def plot_stft(npy, output_dir=None):
 
 
 def plot_heat_map(img, title, save_dir=None):
-    img = np.abs(img[:, :, 0])
+    img = img[:, :, 0]
+    img = (img + 1) / 2
+
     ax = sns.heatmap(img, vmin=0, vmax=1)
     ax.set_title(title)
     ax.invert_yaxis()
