@@ -3,47 +3,20 @@ import time
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
 from gtzan.data_generator import GanSequence
 from gtzan.utils import get_file_list, unet_padding_size, crop
-from gtzan.segmentation_models.unet import Unet as Generator
-from gtzan.model.pix2pix import discriminator as Discriminator
 from gtzan.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from gtzan.plot import plot_heat_map
+from cyclegan.model_settings import *
+from cyclegan.settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, EPOCHS
 
 exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
 
-guitar = get_file_list('/home/gtzan/data/gan_preprocessing/guitar1')
-piano = get_file_list('/home/gtzan/data/gan_preprocessing/piano1')
+guitar_list = get_file_list(MUSIC_NPY_PATH['guitar'])
+piano_list = get_file_list(MUSIC_NPY_PATH['piano'])
 
-guitar_data_gen = GanSequence(guitar, batch_size=1, shuffle=False)
-piano_data_gen = GanSequence(piano, batch_size=1, shuffle=False)
-
-generator_g = Generator(backbone_name='vgg16',
-                        input_shape=(None, None, 3),
-                        decoder_filters=(512, 512, 256, 128, 64),
-                        classes=3,
-                        activation='tanh')
-
-generator_f = Generator(backbone_name='vgg16',
-                        input_shape=(None, None, 3),
-                        decoder_filters=(512, 512, 256, 128, 64),
-                        classes=3,
-                        activation='tanh')
-
-# generator_g = Generator(3, norm_type='instancenorm')
-# generator_f = Generator(3, norm_type='instancenorm')
-
-discriminator_x = Discriminator(norm_type='instancenorm', target=False)
-discriminator_y = Discriminator(norm_type='instancenorm', target=False)
-
-generator_g_optimizer = Adam(2e-4, beta_1=0.5)
-generator_f_optimizer = Adam(2e-4, beta_1=0.5)
-
-discriminator_x_optimizer = Adam(2e-4, beta_1=0.5)
-discriminator_y_optimizer = Adam(2e-4, beta_1=0.5)
-
-checkpoint_path = "/home/gtzan/jimmy/model"
+guitar_data_gen = GanSequence(guitar_list, batch_size=1, shuffle=False)
+piano_data_gen = GanSequence(piano_list, batch_size=1, shuffle=False)
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -54,7 +27,7 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            discriminator_x_optimizer=discriminator_x_optimizer,
                            discriminator_y_optimizer=discriminator_y_optimizer)
 
-ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
+ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=5)
 
 # if a checkpoint exists, restore the latest checkpoint.
 # if ckpt_manager.latest_checkpoint:
@@ -72,7 +45,6 @@ def train_step(real_x, real_y):
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:
-        print('tape')
         # Generator G translates X -> Y
         # Generator F translates Y -> X.
         fake_y = generator_g(real_x, training=True)
@@ -132,7 +104,6 @@ def train_step(real_x, real_y):
         zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
 
-EPOCHS = 40
 for epoch in range(EPOCHS):
     start = time.time()
 
@@ -147,8 +118,8 @@ for epoch in range(EPOCHS):
 
     ckpt_save_path = ckpt_manager.save()
 
-    print('Saving checkpoint for epoch {} at {}'.format(
-        epoch + 1, ckpt_save_path))
+    print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
+                                                        ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))

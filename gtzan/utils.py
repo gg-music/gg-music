@@ -45,7 +45,6 @@ def preprocessing(batch_file_path, output_dir,
         arr_specs = []
         try:
             signal, sr = librosa.load(file_path)
-
             if trim:
                 trim_length = sr * trim
                 signal = signal[:trim_length]
@@ -53,8 +52,7 @@ def preprocessing(batch_file_path, output_dir,
             if split:
                 signal = splitsongs(signal, window=split)
 
-            specs = spec_format(signal)
-
+            specs, _ = spec_format(signal)
         except ValueError:
             continue
         except audioread.exceptions.NoBackendError:
