@@ -1,14 +1,15 @@
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
+
 from gtzan.data_generator import GanSequence
 from gtzan.utils import get_file_list, unet_padding_size, crop
 from gtzan.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from gtzan.plot import plot_heat_map
 from cyclegan.model_settings import *
-from cyclegan.settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, EPOCHS
+from cyclegan.settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
+
 
 exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
 
@@ -27,7 +28,8 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            discriminator_x_optimizer=discriminator_x_optimizer,
                            discriminator_y_optimizer=discriminator_y_optimizer)
 
-ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=5)
+ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=10)
+
 
 # if a checkpoint exists, restore the latest checkpoint.
 # if ckpt_manager.latest_checkpoint:
@@ -35,9 +37,9 @@ ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=5)
 #     print('Latest checkpoint restored!!')
 
 
-def generate_images(model, test_input):
+def generate_images(model, test_input, title, save_dir=None):
     prediction = model(test_input)
-    plot_heat_map(prediction[0])
+    plot_heat_map(prediction[0], title, save_dir)
 
 
 @tf.function
@@ -80,15 +82,19 @@ def train_step(real_x, real_y):
         disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
 
     # Calculate the gradients for generator and discriminator
-    generator_g_gradients = tape.gradient(total_gen_g_loss,
-                                          generator_g.trainable_variables)
-    generator_f_gradients = tape.gradient(total_gen_f_loss,
-                                          generator_f.trainable_variables)
+    with tf.device("/gpu:0"):
+        generator_g_gradients = tape.gradient(total_gen_g_loss,
+                                              generator_g.trainable_variables)
 
-    discriminator_x_gradients = tape.gradient(
-        disc_x_loss, discriminator_x.trainable_variables)
-    discriminator_y_gradients = tape.gradient(
-        disc_y_loss, discriminator_y.trainable_variables)
+    with tf.device("/gpu:1"):
+        generator_f_gradients = tape.gradient(total_gen_f_loss,
+                                              generator_f.trainable_variables)
+
+    with tf.device("/cpu:0"):
+        discriminator_x_gradients = tape.gradient(
+            disc_x_loss, discriminator_x.trainable_variables)
+        discriminator_y_gradients = tape.gradient(
+            disc_y_loss, discriminator_y.trainable_variables)
 
     # Apply the gradients to the optimizer
     generator_g_optimizer.apply_gradients(
@@ -105,21 +111,20 @@ def train_step(real_x, real_y):
 
 
 for epoch in range(EPOCHS):
+    plot_heat_map(piano_data_gen[0][0,:,:,:],
+                  title='reference',save_dir=LOG_PATH)
     start = time.time()
 
     n = 0
     for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
         train_step(image_x, image_y)
+
         if n % 10 == 0:
-            print('.', end='')
+            generate_images(generator_g, piano_data_gen[0],
+                            title=str(n), save_dir=LOG_PATH)
+            ckpt_save_path = ckpt_manager.save()
+            print('Saving checkpoint, train step {}'.format(n))
         n += 1
-
-        generate_images(generator_g, piano_data_gen[0])
-
-    ckpt_save_path = ckpt_manager.save()
-
-    print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
-                                                        ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))

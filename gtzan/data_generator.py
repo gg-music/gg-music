@@ -101,7 +101,7 @@ class GanSequence(Sequence):
         self.file_list = file_list
         self.dim = self.get_dim()
         self.pad_size = ((32, 32),
-                         unet_padding_size(self.dim[1], pool_size=2, layers=8))
+                         unet_padding_size(self.dim[1], pool_size=2, layers=5))
         self.batch_size = batch_size
         self.input_shape = self.get_input_shape()
         self.batch_dim = self.get_batch_dim()
