@@ -1,5 +1,7 @@
 from datetime import datetime
 import time
+import os
+import argparse
 import tensorflow as tf
 
 from gtzan.data_generator import GanSequence
@@ -10,13 +12,30 @@ from cyclegan.model_settings import *
 from cyclegan.settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
 
 
-exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
+ap = argparse.ArgumentParser()
+ap.add_argument('-m','--load_model_name', required=False)
+args = ap.parse_args()
 
-piano_list = get_file_list(MUSIC_NPY_PATH['piano1'])
-guitar_list = get_file_list(MUSIC_NPY_PATH['guitar1'])
+if args.load_model_name:
+    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.load_model_name)
+    LOG_PATH = os.path.join(LOG_PATH, args.load_model_name)
+else:
+    exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
+    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, exec_time)
+    os.mkdir(CHECKPOINT_PATH)
+    LOG_PATH = os.path.join(LOG_PATH, exec_time)
+    os.mkdir(LOG_PATH)
 
-piano_data_gen = GanSequence(piano_list, batch_size=1, shuffle=False)
-guitar_data_gen = GanSequence(guitar_list, batch_size=1, shuffle=False)
+
+piano_train_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
+guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
+piano_test_list = get_file_list(MUSIC_NPY_PATH['piano2_cleaned'])
+guitar_test_list = get_file_list(MUSIC_NPY_PATH['guitar2_cleaned'])
+
+piano_data_gen = GanSequence(piano_train_list, batch_size=1, shuffle=True)
+guitar_data_gen = GanSequence(guitar_train_list, batch_size=1, shuffle=True)
+piano_test_gen = GanSequence(piano_test_list, batch_size=1, shuffle=True)
+guitar_test_gen = GanSequence(guitar_test_list, batch_size=1, shuffle=True)
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -31,9 +50,11 @@ ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=100
 
 
 # if a checkpoint exists, restore the latest checkpoint.
-# if ckpt_manager.latest_checkpoint:
-#     ckpt.restore(ckpt_manager.latest_checkpoint)
-#     print('Latest checkpoint restored!!')
+
+if ckpt_manager.latest_checkpoint:
+    ckpt.restore(ckpt_manager.latest_checkpoint)
+    last_epoch = len(ckpt_manager.checkpoints)
+    print('Latest checkpoint restored!! Last epoch {}'.format(last_epoch))
 
 
 def generate_images(model, test_input, title, save_dir=None):
@@ -109,23 +130,36 @@ def train_step(real_x, real_y):
         zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
 
-for epoch in range(EPOCHS):
-    plot_heat_map(piano_data_gen[0][0,:,:,:],
-                  title='piano_reference',save_dir=LOG_PATH)
-    plot_heat_map(guitar_data_gen[0][0,:,:,:],
-                  title='guitar_reference',save_dir=LOG_PATH)
+start = len(ckpt_manager.checkpoints)
+for epoch in range(start, EPOCHS):
+    plot_heat_map(piano_test_gen[0][0,:,:,:],
+                  title='piano_reference',
+                  save_dir=os.path.join(LOG_PATH, 'piano_to_guitar'))
+
+    plot_heat_map(guitar_test_gen[0][0,:,:,:],
+                  title='guitar_reference',
+                  save_dir=os.path.join(LOG_PATH, 'guitar_to_piano'))
     start = time.time()
+
 
     n = 0
     for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
         train_step(image_x, image_y)
-        generate_images(generator_g, piano_data_gen[0],
-                        title='{:0>2}_{:0>5}'.format(epoch+1, n), save_dir=LOG_PATH)
+        generate_images(generator_g, piano_test_gen[0],
+                        title='epoch{:0>2}_step{:0>4}'.format(epoch+1, n),
+                        save_dir=os.path.join(LOG_PATH,'piano_to_guitar'))
+
+        generate_images(generator_f, guitar_test_gen[0],
+                        title='epoch{:0>2}_step{:0>4}'.format(epoch+1, n),
+                        save_dir=os.path.join(LOG_PATH,'guitar_to_piano'))
 
         if n % 10 == 0:
-            ckpt_save_path = ckpt_manager.save()
-            print('Saving checkpoint, train step {}'.format(n))
+            print("epoch {} step {}".format(epoch+1, n))
+
         n += 1
+    ckpt_save_path = ckpt_manager.save()
+    print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
+                                                         ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))

@@ -338,8 +338,9 @@ def discriminator(norm_type='batchnorm', target=True):
   down1 = downsample(64, 4, norm_type, False)(x)  # (bs, 128, 128, 64)
   down2 = downsample(128, 4, norm_type)(down1)  # (bs, 64, 64, 128)
   down3 = downsample(256, 4, norm_type)(down2)  # (bs, 32, 32, 256)
+  down4 = downsample(512, 4, norm_type)(down3)  # (bs, 16, 16, 512)
 
-  zero_pad1 = tf.keras.layers.ZeroPadding2D()(down3)  # (bs, 34, 34, 256)
+  zero_pad1 = tf.keras.layers.ZeroPadding2D()(down4)  # (bs, 34, 34, 256)
   conv = tf.keras.layers.Conv2D(
       512, 4, strides=1, kernel_initializer=initializer,
       use_bias=False)(zero_pad1)  # (bs, 31, 31, 512)

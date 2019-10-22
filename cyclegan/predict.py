@@ -74,13 +74,13 @@ if __name__ == "__main__":
     ckpt.restore(ckpt_manager.latest_checkpoint)
     print('Latest checkpoint restored!!')
 
-    input_file = '/home/gtzan/data/gan/wav/sounds/piano2/piano2-484.wav'
+    input_file = '/home/gtzan/data/gan/wav/sounds/piano1/piano1-166.wav'
     output_file = f'/home/gtzan/data/gan_output/piano_to_guitar/{input_file.split("/")[-1]}'
     # predict_data_gen = PredictSequence()
     predict(ckpt.generator_g, input_file, output_file)
     print('Prediction saved in', output_file)
 
-    input_file = '/home/gtzan/data/gan/wav/sounds/guitar2/guitar2-484.wav'
+    input_file = '/home/gtzan/data/gan/wav/sounds/guitar2/guitar2-333.wav'
     output_file = f'/home/gtzan/data/gan_output/guitar_to_piano/{input_file.split("/")[-1]}'
     # predict_data_gen = PredictSequence()
     predict(ckpt.generator_f, input_file, output_file)
