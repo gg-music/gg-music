@@ -1,4 +1,5 @@
 import os
+import argparse
 import tensorflow as tf
 from gtzan.data_generator import GanSequence
 from gtzan import signal
@@ -56,8 +57,12 @@ def predict(model, input_filename, output_filename):
 
 
 if __name__ == "__main__":
-    # Enable mixed precision
-    os.environ['TF_ENABLE_AUTO_MIXED_PRECISION'] = '1'
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-m', '--load_model_name', required=True)
+    args = ap.parse_args()
+
+    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.load_model_name)
+
     ckpt = tf.train.Checkpoint(
         generator_g=generator_g,
         generator_f=generator_f,
@@ -72,7 +77,8 @@ if __name__ == "__main__":
                                               CHECKPOINT_PATH,
                                               max_to_keep=100)
     ckpt.restore(ckpt_manager.latest_checkpoint)
-    print('Latest checkpoint restored!!')
+    last_epoch = len(ckpt_manager.checkpoints)
+    print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
     input_file = '/home/gtzan/data/gan/wav/sounds/piano1/piano1-166.wav'
     output_file = f'/home/gtzan/data/gan_output/piano_to_guitar/{input_file.split("/")[-1]}'

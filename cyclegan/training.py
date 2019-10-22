@@ -34,8 +34,8 @@ guitar_test_list = get_file_list(MUSIC_NPY_PATH['guitar2_cleaned'])
 
 piano_data_gen = GanSequence(piano_train_list, batch_size=1, shuffle=True)
 guitar_data_gen = GanSequence(guitar_train_list, batch_size=1, shuffle=True)
-piano_test_gen = GanSequence(piano_test_list, batch_size=1, shuffle=True)
-guitar_test_gen = GanSequence(guitar_test_list, batch_size=1, shuffle=True)
+piano_test_gen = GanSequence(piano_test_list, batch_size=1, shuffle=False)
+guitar_test_gen = GanSequence(guitar_test_list, batch_size=1, shuffle=False)
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -54,7 +54,7 @@ ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=100
 if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
-    print('Latest checkpoint restored!! Last epoch {}'.format(last_epoch))
+    print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
 
 def generate_images(model, test_input, title, save_dir=None):
