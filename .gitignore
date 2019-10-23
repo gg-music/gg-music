@@ -9,11 +9,7 @@ yarn-error.log
 *.pkl
 
 ### VisualStudioCode template
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+**/.vscode
 
 ### macOS template
 # General
