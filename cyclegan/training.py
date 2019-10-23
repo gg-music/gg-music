@@ -12,12 +12,12 @@ from .model_settings import *
 from .settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-m', '--load_model_name', required=False)
+ap.add_argument('-m', '--model', required=False)
 args = ap.parse_args()
 
-if args.load_model_name:
-    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.load_model_name)
-    LOG_PATH = os.path.join(LOG_PATH, args.model)
+if args.model:
+    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.model)
+    LOG_PATH = os.path.join(LOG_PATH, os.path.basename(args.model))
 else:
     exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
     CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, exec_time)
@@ -55,12 +55,6 @@ if ckpt_manager.latest_checkpoint:
     last_epoch = len(ckpt_manager.checkpoints)
     print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
-
-def generate_images(model, test_input, title, save_dir=None):
-    prediction = model(test_input)
-    plot_heat_map(prediction[0], title, save_dir)
-
-
 start = len(ckpt_manager.checkpoints)
 for epoch in range(start, EPOCHS):
     plot_heat_map(piano_test_gen[0][0, :, :, :],
@@ -75,15 +69,15 @@ for epoch in range(start, EPOCHS):
     n = 0
     for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
         train_step(image_x, image_y)
-        generate_images(generator_g,
-                        piano_test_gen[0],
-                        title='epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                        save_dir=os.path.join(LOG_PATH, 'piano_to_guitar'))
 
-        generate_images(generator_f,
-                        guitar_test_gen[0],
-                        title='epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                        save_dir=os.path.join(LOG_PATH, 'guitar_to_piano'))
+        prediction_g = generator_g(piano_test_gen[0])
+        plot_heat_map(prediction_g[0],
+                      'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                      os.path.join(LOG_PATH, 'piano_to_guitar'))
+        prediction_f = generator_f(guitar_test_gen[0])
+        plot_heat_map(prediction_f[0],
+                      'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                      os.path.join(LOG_PATH, 'guitar_to_piano'))
 
         if n % 10 == 0:
             print("epoch {} step {}".format(epoch + 1, n))
