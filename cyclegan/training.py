@@ -1,4 +1,3 @@
-from datetime import datetime
 import time
 import os
 import argparse
@@ -6,7 +5,6 @@ import tensorflow as tf
 
 from .helpers.data_generator import GanSequence
 from .helpers.utils import get_file_list, make_dirs
-from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from .helpers.plot import plot_heat_map
 from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
@@ -22,10 +20,13 @@ args = ap.parse_args()
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 make_dirs(SAVE_MODEL_PATH)
 
-piano_train_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
-guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
-piano_test_list = get_file_list(MUSIC_NPY_PATH['piano2_cleaned'])
-guitar_test_list = get_file_list(MUSIC_NPY_PATH['guitar2_cleaned'])
+piano_train_list = get_file_list(MUSIC_NPY_PATH['piano2_cleaned'])
+guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar2_cleaned'])
+piano_test_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
+guitar_test_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
+
+
+
 
 piano_data_gen = GanSequence(piano_train_list, batch_size=1, shuffle=True)
 guitar_data_gen = GanSequence(guitar_train_list, batch_size=1, shuffle=True)

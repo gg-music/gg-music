@@ -1,3 +1,5 @@
+from .helpers.utils import unet_padding_size
+
 MUSIC_NPY_PATH = {
     'guitar1': '/home/gtzan/data/gan_preprocessing/guitar1',
     'guitar2': '/home/gtzan/data/gan_preprocessing/guitar2',
@@ -14,7 +16,8 @@ MUSIC_SRC_PATH = {
     'to': '/home/gtzan/data/gan_preprocessing/'
 }
 MODEL_ROOT_PATH = '/home/gtzan/models'
-EPOCHS = 40
+EPOCHS = 100
 DEFAULT_SAMPLING_RATE = 22050
 DROPOUT_RATE = 0.5
 BN_AXIS = 3
+PAD_SIZE = ((0,0), unet_padding_size(431, pool_size=2, layers=5))
