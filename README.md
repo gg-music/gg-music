@@ -5,6 +5,7 @@
 ## classification
 使用 blues, classical, disco, hip-hop, jazz, rock, country 七種分類
 > 簡報是以 `classification/notebooks/107` 的結果呈現
+
 ### fma
 本來想用這個當作 training, 但跑完發現資料很髒效果不好
 * [資料來源](https://github.com/mdeff/fma)
