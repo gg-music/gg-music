@@ -4,10 +4,10 @@ import os
 workspace = os.path.dirname(os.getcwd())
 sys.path.append(workspace)
 
-from gtzan.model.generator import get_model as Generator
-from gtzan.model.discrminator import get_model as Discriminator
-from gtzan.utils import unet_padding_size, crop
-from gtzan.plot import plot_heat_map
+from .generator import get_model as Generator
+from .discrminator import get_model as Discriminator
+from cyclegan.helpers.utils import unet_padding_size, crop
+from cyclegan.helpers.plot import plot_heat_map
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns

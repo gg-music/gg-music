@@ -5,7 +5,7 @@ import numpy as np
 workspace = os.path.dirname(os.getcwd())
 sys.path.append(workspace)
 
-from gtzan.plot import plot_stft
+from .helpers.plot import plot_stft
 
 output_dir = "../logs"
 

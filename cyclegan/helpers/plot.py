@@ -3,7 +3,8 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from gtzan import signal
+from . import signal
+from .utils import make_dirs
 
 
 # Plot and save keras trainning history
@@ -112,6 +113,9 @@ def plot_heat_map(img, title, save_dir=None):
     ax = sns.heatmap(img, vmin=0, vmax=1)
     ax.set_title(title)
     ax.invert_yaxis()
+
+    make_dirs(save_dir)
+
     if save_dir:
         output = os.path.join(save_dir, title + '.png')
         plt.savefig(output, format='png', bbox_inches='tight')

@@ -5,7 +5,7 @@ import argparse
 import tensorflow as tf
 
 from .helpers.data_generator import GanSequence
-from .helpers.utils import get_file_list
+from .helpers.utils import get_file_list, make_dirs
 from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from .helpers.plot import plot_heat_map
 from .model_settings import *
@@ -20,6 +20,7 @@ ap.add_argument('-m',
 args = ap.parse_args()
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
+make_dirs(SAVE_MODEL_PATH)
 
 piano_train_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
 guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
