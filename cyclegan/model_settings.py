@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
-from gtzan.segmentation_models.nestnet import Nestnet as Generator
-from gtzan.model.pix2pix import discriminator as Discriminator
+from .segmentation_models.nestnet import Nestnet as Generator
+from .model.pix2pix import discriminator as Discriminator
 
 # Generator G translates X -> Y
 # Generator F translates Y -> X.
@@ -9,13 +9,13 @@ from gtzan.model.pix2pix import discriminator as Discriminator
 with tf.device("/cpu:0"):
     generator_g = Generator(backbone_name='vgg16',
                             input_shape=(None, None, 3),
-                            decoder_filters=(256,128,64,32,16),
+                            decoder_filters=(256, 128, 64, 32, 16),
                             classes=3,
                             activation='tanh')
 
     generator_f = Generator(backbone_name='vgg16',
                             input_shape=(None, None, 3),
-                            decoder_filters=(256,128,64,32,16),
+                            decoder_filters=(256, 128, 64, 32, 16),
                             classes=3,
                             activation='tanh')
 

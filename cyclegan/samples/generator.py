@@ -4,8 +4,8 @@ from tensorflow.keras.layers import Conv2DTranspose, Input, ZeroPadding2D, MaxPo
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 import numpy as np
-from gtzan.utils import unet_padding_size
-from cyclegan.settings import DROPOUT_RATE, BN_AXIS
+from .helpers.utils import unet_padding_size
+from .settings import DROPOUT_RATE, BN_AXIS
 
 
 def standard_unit(input_tensor, stage, nb_filter, kernel_size=3):

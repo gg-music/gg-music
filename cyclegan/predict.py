@@ -1,12 +1,12 @@
 import os
 import argparse
 import tensorflow as tf
-from gtzan.data_generator import GanSequence
-from gtzan import signal
-from cyclegan.model_settings import *
-from cyclegan.settings import DEFAULT_SAMPLING_RATE
+from .helpers.data_generator import GanSequence
+from .helpers import signal
+from .model_settings import *
+from .settings import DEFAULT_SAMPLING_RATE
 import numpy as np
-from gtzan.utils import unet_padding_size
+from .helpers.utils import unet_padding_size
 from librosa.util import normalize
 
 
@@ -73,8 +73,7 @@ if __name__ == "__main__":
         discriminator_x_optimizer=discriminator_x_optimizer,
         discriminator_y_optimizer=discriminator_y_optimizer)
 
-    ckpt_manager = tf.train.CheckpointManager(ckpt, model,
-                                              max_to_keep=100)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, model, max_to_keep=100)
     ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
     print('Latest checkpoint epoch {} restored!!'.format(last_epoch))

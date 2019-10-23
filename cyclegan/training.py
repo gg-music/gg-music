@@ -4,16 +4,15 @@ import os
 import argparse
 import tensorflow as tf
 
-from gtzan.data_generator import GanSequence
-from gtzan.utils import get_file_list
-from gtzan.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
-from gtzan.plot import plot_heat_map
-from cyclegan.model_settings import *
-from cyclegan.settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
-
+from .helpers.data_generator import GanSequence
+from .helpers.utils import get_file_list
+from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
+from .helpers.plot import plot_heat_map
+from .model_settings import *
+from .settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-m','--load_model_name', required=False)
+ap.add_argument('-m', '--load_model_name', required=False)
 args = ap.parse_args()
 
 if args.load_model_name:
@@ -25,7 +24,6 @@ else:
     os.mkdir(CHECKPOINT_PATH)
     LOG_PATH = os.path.join(LOG_PATH, exec_time)
     os.mkdir(LOG_PATH)
-
 
 piano_train_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
 guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
@@ -46,8 +44,9 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            discriminator_x_optimizer=discriminator_x_optimizer,
                            discriminator_y_optimizer=discriminator_y_optimizer)
 
-ckpt_manager = tf.train.CheckpointManager(ckpt, CHECKPOINT_PATH, max_to_keep=100)
-
+ckpt_manager = tf.train.CheckpointManager(ckpt,
+                                          CHECKPOINT_PATH,
+                                          max_to_keep=100)
 
 # if a checkpoint exists, restore the latest checkpoint.
 
@@ -132,34 +131,35 @@ def train_step(real_x, real_y):
 
 start = len(ckpt_manager.checkpoints)
 for epoch in range(start, EPOCHS):
-    plot_heat_map(piano_test_gen[0][0,:,:,:],
+    plot_heat_map(piano_test_gen[0][0, :, :, :],
                   title='piano_reference',
                   save_dir=os.path.join(LOG_PATH, 'piano_to_guitar'))
 
-    plot_heat_map(guitar_test_gen[0][0,:,:,:],
+    plot_heat_map(guitar_test_gen[0][0, :, :, :],
                   title='guitar_reference',
                   save_dir=os.path.join(LOG_PATH, 'guitar_to_piano'))
     start = time.time()
 
-
     n = 0
     for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
         train_step(image_x, image_y)
-        generate_images(generator_g, piano_test_gen[0],
-                        title='epoch{:0>2}_step{:0>4}'.format(epoch+1, n),
-                        save_dir=os.path.join(LOG_PATH,'piano_to_guitar'))
+        generate_images(generator_g,
+                        piano_test_gen[0],
+                        title='epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                        save_dir=os.path.join(LOG_PATH, 'piano_to_guitar'))
 
-        generate_images(generator_f, guitar_test_gen[0],
-                        title='epoch{:0>2}_step{:0>4}'.format(epoch+1, n),
-                        save_dir=os.path.join(LOG_PATH,'guitar_to_piano'))
+        generate_images(generator_f,
+                        guitar_test_gen[0],
+                        title='epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                        save_dir=os.path.join(LOG_PATH, 'guitar_to_piano'))
 
         if n % 10 == 0:
-            print("epoch {} step {}".format(epoch+1, n))
+            print("epoch {} step {}".format(epoch + 1, n))
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
-    print ('Saving checkpoint for epoch {} at {}'.format(epoch+1,
-                                                         ckpt_save_path))
+    print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
+                                                        ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))
