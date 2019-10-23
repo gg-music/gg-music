@@ -1,4 +1,3 @@
-## 說明
 * training set
 
 gtzan 的前 90 首
