@@ -1,27 +1,16 @@
 import os
 import argparse
 import tensorflow as tf
-from .helpers.data_generator import GanSequence
 from .helpers import signal
 from .model_settings import *
 from .settings import DEFAULT_SAMPLING_RATE
 import numpy as np
 from .helpers.utils import unet_padding_size
-from librosa.util import normalize
-
-
-def get_input_shape(dim, pad_size):
-    return (dim[0] + pad_size[0][0] + pad_size[0][1],
-            dim[1] + pad_size[1][0] + pad_size[1][1], 3)
 
 
 def get_input_shape_sliced(dim, pad_size):
     return (1, dim[1] + pad_size[1][0] + pad_size[1][1],
             dim[2] + pad_size[2][0] + pad_size[2][1], 3)
-
-
-def get_pad_size(dim):
-    return ((32, 32), unet_padding_size(dim[1], pool_size=2, layers=8))
 
 
 def get_pad_size_sliced(dim):
