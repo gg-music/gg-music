@@ -1,7 +1,16 @@
-# classification
-## fma
+# overview
+* 初階目標程式: `classification/`
+* 進階目標程式: `cyclegan/`
+
+## classification
+使用 blues, classical, disco, hip-hop, jazz, rock, country 七種分類
+> 簡報是以 `classification/notebooks/107` 的結果呈現
+### fma
+本來想用這個當作 training, 但跑完發現資料很髒效果不好
 * [資料來源](https://github.com/mdeff/fma)
-* [metadata](https://os.unil.cloud.switch.ch/fma/fma_metadata.zip): transform_track_gerne_mapping_csv 的檔案來源
-#### 說明
-在 classification/fma_preprocess 中有四份檔案, 1~2做完即
-可用.py處理 fma 的資料, 3~4是後來做完 fma 覺得結果不好所以改成用 gtzan 的分類做
+* [metadata](https://os.unil.cloud.switch.ch/fma/fma_metadata.zip)
+### gtzan
+* [資料來源](http://marsyas.info/downloads/datasets.html)
+
+## cyclegan
+使用 cyclegan 進行音色轉換, generator 用 unet 架構, discrminator 用 patchGAN 的 model
