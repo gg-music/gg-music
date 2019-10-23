@@ -4,7 +4,7 @@ import tensorflow as tf
 from gtzan.data_generator import GanSequence
 from gtzan import signal
 from cyclegan.model_settings import *
-from cyclegan.settings import DEFAULT_SAMPLING_RATE, CHECKPOINT_PATH
+from cyclegan.settings import DEFAULT_SAMPLING_RATE
 import numpy as np
 from gtzan.utils import unet_padding_size
 from librosa.util import normalize
@@ -58,10 +58,10 @@ def predict(model, input_filename, output_filename):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument('-m', '--load_model_name', required=True)
+    ap.add_argument('-m', '--model', required=True)
     args = ap.parse_args()
 
-    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.load_model_name)
+    model = args.model
 
     ckpt = tf.train.Checkpoint(
         generator_g=generator_g,
@@ -73,21 +73,24 @@ if __name__ == "__main__":
         discriminator_x_optimizer=discriminator_x_optimizer,
         discriminator_y_optimizer=discriminator_y_optimizer)
 
-    ckpt_manager = tf.train.CheckpointManager(ckpt,
-                                              CHECKPOINT_PATH,
+    ckpt_manager = tf.train.CheckpointManager(ckpt, model,
                                               max_to_keep=100)
     ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
     print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
     input_file = '/home/gtzan/data/gan/wav/sounds/piano1/piano1-166.wav'
-    output_file = f'/home/gtzan/data/gan_output/piano_to_guitar/{input_file.split("/")[-1]}'
-    # predict_data_gen = PredictSequence()
+    output_file = '/home/gtzan/data/gan_output/piano_to_guitar/' \
+                  + os.path.basename(ckpt_manager.latest_checkpoint) \
+                  + os.path.basename(input_file)
+
     predict(ckpt.generator_g, input_file, output_file)
     print('Prediction saved in', output_file)
 
-    input_file = '/home/gtzan/data/gan/wav/sounds/guitar2/guitar2-333.wav'
-    output_file = f'/home/gtzan/data/gan_output/guitar_to_piano/{input_file.split("/")[-1]}'
-    # predict_data_gen = PredictSequence()
+    input_file = '/home/gtzan/data/gan/wav/sounds/guitar2/guitar2-463.wav'
+    output_file = '/home/gtzan/data/gan_output/guitar_to_piano/' \
+                  + os.path.basename(ckpt_manager.latest_checkpoint) \
+                  + os.path.basename(input_file)
+
     predict(ckpt.generator_f, input_file, output_file)
     print('Prediction saved in', output_file)
