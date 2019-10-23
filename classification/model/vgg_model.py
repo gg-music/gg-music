@@ -13,7 +13,8 @@ from tensorflow.keras.applications.vgg16 import VGG16
 
 def vgg16_model(input_shape, num_genres, freezed_layers=5):
     input_tensor = Input(shape=input_shape)
-    vgg16 = VGG16(include_top=False, weights='imagenet',
+    vgg16 = VGG16(include_top=False,
+                  weights='imagenet',
                   input_tensor=input_tensor)
 
     top = Sequential()
@@ -29,9 +30,6 @@ def vgg16_model(input_shape, num_genres, freezed_layers=5):
     return model
 
 
-
-
 if __name__ == '__main__':
     model = vgg16_model(input_shape=(128, 129, 3), num_genres=10)
     model.summary()
-

@@ -3,11 +3,7 @@ import numpy as np
 import math
 import os
 import tensorflow as tf
-from tensorflow.keras.utils import Sequence, to_categorical
-from librosa.util import normalize
-
-from gtzan.utils import unet_padding_size
-from gtzan.signal import amplitude_to_db, slice_magnitude
+from tensorflow.keras.utils import Sequence
 
 
 class BaseSequence(Sequence):

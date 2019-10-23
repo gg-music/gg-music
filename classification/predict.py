@@ -7,14 +7,12 @@ sys.path.append(workspace)
 import numpy as np
 from scipy import stats
 import argparse
-
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from collections import OrderedDict
-from gtzan.plot import plot_confusion_matrix
-from gtzan.utils import get_file_list, load_mapping, pred_to_y
-from gtzan.data_generator import PredictSequence
-
+from .helpers.plot import plot_confusion_matrix
+from .helpers.utils import get_file_list, load_mapping, pred_to_y
+from .helpers.data_generator import PredictSequence
 from sklearn.metrics import confusion_matrix, accuracy_score
 
 parser = argparse.ArgumentParser(description='predict gtzan')
@@ -33,10 +31,10 @@ cnn = load_model(args.model)
 
 pred = cnn.predict(predict_generator,
                    use_multiprocessing=True,
-                   workers=5, verbose=1)
+                   workers=5,
+                   verbose=1)
 
-y_pred = pred_to_y(pred, n_song=len(y),
-                   split_per_song=predict_generator.dim[0])
+y_pred = pred_to_y(pred, n_song=len(y), split_per_song=predict_generator.dim[0])
 
 cm = confusion_matrix(y_val, y_pred)
 print(cm)
@@ -44,5 +42,9 @@ print(cm)
 acc = accuracy_score(y_val, y_pred)
 print('acc= ', acc)
 
-keys = OrderedDict(sorted(load_mapping(reverse=True).items(), key=lambda t: t[1])).keys()
-plot_confusion_matrix('logs/{}cm.png'.format(model_name), cm, keys, normalize=True)
+keys = OrderedDict(
+    sorted(load_mapping(reverse=True).items(), key=lambda t: t[1])).keys()
+plot_confusion_matrix('logs/{}cm.png'.format(model_name),
+                      cm,
+                      keys,
+                      normalize=True)

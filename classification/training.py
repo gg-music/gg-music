@@ -9,18 +9,21 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from gtzan.learning_rate.cyclical_lr import CyclicLR
 from sklearn.model_selection import train_test_split
 
-from gtzan.classification_model.vgg_model import vgg16_model
-from gtzan.data_generator import DataSequence
-from gtzan.utils import get_file_list
-from gtzan.plot import plot_save_history
+from .helpers.learning_rate import CyclicLR
+from .model.vgg_model import vgg16_model
+from .helpers.data_generator import DataSequence
+from .helpers.utils import get_file_list
+from .helpers.plot import plot_save_history
 
 X, y = get_file_list('/home/gtzan/ssd/fma_balanced', catalog_offset=-2)
 
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(X,
+                                                    y,
+                                                    test_size=0.2,
+                                                    random_state=42,
+                                                    stratify=y)
 
 train_list = list(zip(X_train, y_train))
 test_list = list(zip(X_test, y_test))
@@ -43,18 +46,23 @@ with mirrored_strategy.scope():
                 metrics=['accuracy'])
 
 checkpoint = ModelCheckpoint('model/checkpoint_model_{}.h5'.format(exec_time),
-                             monitor='val_loss', save_best_only=True, verbose=1)
+                             monitor='val_loss',
+                             save_best_only=True,
+                             verbose=1)
 earlystop = EarlyStopping(monitor='val_loss', patience=20, verbose=1)
 
-clr = CyclicLR(base_lr=1e-5, max_lr=3e-4,
-               step_size=len(train_generator) * 2, mode='triangular2')
+clr = CyclicLR(base_lr=1e-5,
+               max_lr=3e-4,
+               step_size=len(train_generator) * 2,
+               mode='triangular2')
 
 hist = cnn.fit(train_generator,
                validation_data=test_generator,
                epochs=100,
                use_multiprocessing=True,
                shuffle=False,
-               workers=10, verbose=1,
+               workers=10,
+               verbose=1,
                callbacks=[clr, checkpoint, earlystop])
 
 cnn.save('model/vgg_model_{}.h5'.format(exec_time))

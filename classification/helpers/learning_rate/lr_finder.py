@@ -31,7 +31,11 @@ class LRFinder(Callback):
 
     '''
 
-    def __init__(self, min_lr=1e-5, max_lr=1e-2, steps_per_epoch=None, epochs=None):
+    def __init__(self,
+                 min_lr=1e-5,
+                 max_lr=1e-2,
+                 steps_per_epoch=None,
+                 epochs=None):
         super().__init__()
 
         self.min_lr = min_lr
@@ -55,7 +59,8 @@ class LRFinder(Callback):
         logs = logs or {}
         self.iteration += 1
 
-        self.history.setdefault('lr', []).append(K.get_value(self.model.optimizer.lr))
+        self.history.setdefault('lr',
+                                []).append(K.get_value(self.model.optimizer.lr))
         self.history.setdefault('iterations', []).append(self.iteration)
 
         for k, v in logs.items():

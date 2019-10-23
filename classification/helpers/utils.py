@@ -2,13 +2,10 @@ import json
 import os
 from functools import partial
 from multiprocessing import Pool, cpu_count
-
 import audioread
 import librosa
 import numpy as np
 from scipy import stats
-
-from gtzan.signal import splitsongs
 
 
 def batch(iterable, n=1):
@@ -17,9 +14,12 @@ def batch(iterable, n=1):
         yield iterable[ndx:min(ndx + n, iter_len)]
 
 
-def parallel_preprocessing(song_list, output_dir,
-                           spec_format=None, category=None,
-                           batch_size=10, **kwargs):
+def parallel_preprocessing(song_list,
+                           output_dir,
+                           spec_format=None,
+                           category=None,
+                           batch_size=10,
+                           **kwargs):
     par = partial(preprocessing,
                   category=category,
                   output_dir=output_dir,
@@ -35,9 +35,12 @@ def parallel_preprocessing(song_list, output_dir,
     pool.join()
 
 
-def preprocessing(batch_file_path, output_dir,
-                  spec_format, category,
-                  trim=None, split=None):
+def preprocessing(batch_file_path,
+                  output_dir,
+                  spec_format,
+                  category,
+                  trim=None,
+                  split=None):
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir, mode=0o777)
 
@@ -111,25 +114,28 @@ def pred_to_y(pred, n_song, split_per_song):
     max_prob = np.argmax(pred, axis=1)
     group_by_song = np.array(max_prob[:total]).reshape((n_song, split_per_song))
     song_mode = stats.mode(group_by_song, axis=1)
-    y_pred = np.array(song_mode[0]).reshape(n_song, )
+    y_pred = np.array(song_mode[0]).reshape(n_song,)
 
     return y_pred
 
 
-def unet_padding_size(length, pool_size, layers=4):
-    output = length
-    for _ in range(layers):
-        output = int(np.ceil(output / pool_size))
+def to_melspectrogram(songs, n_fft=1024, hop_length=512):
+    melspec = lambda x: librosa.feature.melspectrogram(
+        x, n_fft=n_fft, hop_length=hop_length)[:, :, np.newaxis]
 
-    padding = output * (pool_size ** layers) - length
-    lpad = int(np.ceil(padding / 2))
-    rpad = int(np.floor(padding / 2))
-
-    return lpad, rpad
+    tsongs = map(melspec, songs)
+    return np.array(list(tsongs))
 
 
-def crop(image, crop_size):
-    lpad = crop_size[1][0]
-    rpad = crop_size[1][1]
-    image = image[:, lpad:-rpad]
-    return image
+def splitsongs(X, window=0.1, overlap=0.5):
+    temp_X = []
+
+    xshape = X.shape[0]
+    chunk = int(xshape * window)
+    offset = int(chunk * (1. - overlap))
+
+    spsong = [X[i:i + chunk] for i in range(0, xshape - chunk + offset, offset)]
+    for s in spsong:
+        temp_X.append(s)
+
+    return np.array(temp_X)

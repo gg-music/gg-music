@@ -69,19 +69,17 @@ class CyclicLR(Callback):
       https://arxiv.org/abs/1506.01186)
     """
 
-    def __init__(
-            self,
-            base_lr=0.001,
-            max_lr=0.006,
-            step_size=2000.,
-            mode='triangular',
-            gamma=1.,
-            scale_fn=None,
-            scale_mode='cycle'):
+    def __init__(self,
+                 base_lr=0.001,
+                 max_lr=0.006,
+                 step_size=2000.,
+                 mode='triangular',
+                 gamma=1.,
+                 scale_fn=None,
+                 scale_mode='cycle'):
         super(CyclicLR, self).__init__()
 
-        if mode not in ['triangular', 'triangular2',
-                        'exp_range']:
+        if mode not in ['triangular', 'triangular2', 'exp_range']:
             raise KeyError("mode must be one of 'triangular', "
                            "'triangular2', or 'exp_range'")
         self.base_lr = base_lr
@@ -97,7 +95,7 @@ class CyclicLR(Callback):
                 self.scale_fn = lambda x: 1 / (2.**(x - 1))
                 self.scale_mode = 'cycle'
             elif self.mode == 'exp_range':
-                self.scale_fn = lambda x: gamma ** x
+                self.scale_fn = lambda x: gamma**x
                 self.scale_mode = 'iterations'
         else:
             self.scale_fn = scale_fn
@@ -108,8 +106,7 @@ class CyclicLR(Callback):
 
         self._reset()
 
-    def _reset(self, new_base_lr=None, new_max_lr=None,
-               new_step_size=None):
+    def _reset(self, new_base_lr=None, new_max_lr=None, new_step_size=None):
         """Resets cycle iterations.
         Optional boundary/step size adjustment.
         """
@@ -146,10 +143,8 @@ class CyclicLR(Callback):
         self.clr_iterations += 1
         K.set_value(self.model.optimizer.lr, self.clr())
 
-        self.history.setdefault(
-            'lr', []).append(
-            K.get_value(
-                self.model.optimizer.lr))
+        self.history.setdefault('lr',
+                                []).append(K.get_value(self.model.optimizer.lr))
         self.history.setdefault('iterations', []).append(self.trn_iterations)
 
         for k, v in logs.items():

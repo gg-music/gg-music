@@ -3,7 +3,6 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from gtzan import signal
 
 
 # Plot and save keras trainning history
@@ -31,7 +30,9 @@ def plot_save_history(hist, save_dir):
 
 
 # http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
-def plot_confusion_matrix(save_dir, cm, classes,
+def plot_confusion_matrix(save_dir,
+                          cm,
+                          classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -55,7 +56,9 @@ def plot_confusion_matrix(save_dir, cm, classes,
     fmt = '.2f' if normalize else 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
+        plt.text(j,
+                 i,
+                 format(cm[i, j], fmt),
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
@@ -79,38 +82,6 @@ def plot_mfcc(npy, output_dir=None):
     ax.invert_yaxis()
     if output_dir:
         plt.savefig(save_dir + '.png', format='png', bbox_inches='tight')
-        plt.close()
-    else:
-        plt.show()
-
-
-def plot_stft(npy, output_dir=None):
-    song = np.load(npy)
-    song_path, song_name = os.path.split(npy)
-    song_path = song_path.split('/')
-    title = os.path.join(song_path[-2], song_path[-1], song_name)
-    song = signal.amplitude_to_db(song)
-    ax = sns.heatmap(song, vmin=0, vmax=0.5, cbar=False)
-    ax.set_title(title)
-    ax.invert_yaxis()
-    if output_dir:
-        save_dir = os.path.join(output_dir, song_name.split('.')[-2])
-        plt.savefig(save_dir + '.png', format='png', bbox_inches='tight')
-        plt.close()
-    else:
-        plt.show()
-
-
-def plot_heat_map(img, title, save_dir=None):
-    img = img[:, :, 0]
-    img = (img + 1) / 2
-
-    ax = sns.heatmap(img, vmin=0, vmax=1)
-    ax.set_title(title)
-    ax.invert_yaxis()
-    if save_dir:
-        output = os.path.join(save_dir, title + '.png')
-        plt.savefig(output, format='png', bbox_inches='tight')
         plt.close()
     else:
         plt.show()
