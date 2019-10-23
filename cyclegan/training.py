@@ -9,21 +9,17 @@ from .helpers.utils import get_file_list
 from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 from .helpers.plot import plot_heat_map
 from .model_settings import *
-from .settings import MUSIC_NPY_PATH, CHECKPOINT_PATH, LOG_PATH, EPOCHS
+from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-m', '--model', required=False)
+ap.add_argument('-m',
+                '--model',
+                required=True,
+                help='your model name',
+                type=str)
 args = ap.parse_args()
 
-if args.model:
-    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, args.model)
-    LOG_PATH = os.path.join(LOG_PATH, os.path.basename(args.model))
-else:
-    exec_time = datetime.now().strftime('%Y%m%d%H%M%S')
-    CHECKPOINT_PATH = os.path.join(CHECKPOINT_PATH, exec_time)
-    os.mkdir(CHECKPOINT_PATH)
-    LOG_PATH = os.path.join(LOG_PATH, exec_time)
-    os.mkdir(LOG_PATH)
+SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 
 piano_train_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
 guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
@@ -45,7 +41,7 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            discriminator_y_optimizer=discriminator_y_optimizer)
 
 ckpt_manager = tf.train.CheckpointManager(ckpt,
-                                          CHECKPOINT_PATH,
+                                          SAVE_MODEL_PATH,
                                           max_to_keep=100)
 
 # if a checkpoint exists, restore the latest checkpoint.
@@ -59,11 +55,11 @@ start = len(ckpt_manager.checkpoints)
 for epoch in range(start, EPOCHS):
     plot_heat_map(piano_test_gen[0][0, :, :, :],
                   title='piano_reference',
-                  save_dir=os.path.join(LOG_PATH, 'piano_to_guitar'))
+                  save_dir=os.path.join(SAVE_MODEL_PATH, 'piano_to_guitar'))
 
     plot_heat_map(guitar_test_gen[0][0, :, :, :],
                   title='guitar_reference',
-                  save_dir=os.path.join(LOG_PATH, 'guitar_to_piano'))
+                  save_dir=os.path.join(SAVE_MODEL_PATH, 'guitar_to_piano'))
     start = time.time()
 
     n = 0
@@ -73,11 +69,11 @@ for epoch in range(start, EPOCHS):
         prediction_g = generator_g(piano_test_gen[0])
         plot_heat_map(prediction_g[0],
                       'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                      os.path.join(LOG_PATH, 'piano_to_guitar'))
+                      os.path.join(SAVE_MODEL_PATH, 'piano_to_guitar'))
         prediction_f = generator_f(guitar_test_gen[0])
         plot_heat_map(prediction_f[0],
                       'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                      os.path.join(LOG_PATH, 'guitar_to_piano'))
+                      os.path.join(SAVE_MODEL_PATH, 'guitar_to_piano'))
 
         if n % 10 == 0:
             print("epoch {} step {}".format(epoch + 1, n))
