@@ -3,7 +3,7 @@ import math
 import os
 import tensorflow as tf
 from tensorflow.keras.utils import Sequence
-from ..settings import PAD_SIZE
+from cyclegan.settings import PAD_SIZE
 
 class GanSequence(Sequence):
 

@@ -3,7 +3,8 @@ import os
 import argparse
 import tensorflow as tf
 
-from .helpers.utils import get_file_list, make_dirs, extract_example
+from .helpers.utils import get_file_list, make_dirs
+from .helpers.example_protocol import extract_example
 from .helpers.plot import plot_heat_map
 from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH

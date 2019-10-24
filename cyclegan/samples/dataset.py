@@ -1,5 +1,6 @@
 import tensorflow as tf
-from cyclegan.helpers.utils import get_file_list, extract_example
+from cyclegan.helpers.utils import get_file_list
+from cyclegan.helpers.example_protocol import extract_example
 from cyclegan.helpers.plot import plot_heat_map
 from cyclegan.settings import MUSIC_NPY_PATH
 
