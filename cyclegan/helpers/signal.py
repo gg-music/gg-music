@@ -55,7 +55,7 @@ def join_magnitude_slices(mag_sliced, target_shape, pad_size):
     print('before', mag.shape)
     for i in range(mag_sliced.shape[0]):
         mag[:, (i) * mag_sliced.shape[2]:(i + 1) *
-            mag_sliced.shape[2]] = mag_sliced[i, :, :, 1]
+                                         mag_sliced.shape[2]] = mag_sliced[i, :, :, 1]
     print('progressing', mag.shape)
     # mag = mag[pad_size[1][0]:target_shape[0] -
     #   pad_size[1][1], pad_size[2][0]:target_shape[1] - pad_size[2][1]]
@@ -71,14 +71,14 @@ def unpad_to_raw(padded, pad_size):
     x = np.zeros((axis1_dim, axis2_dim))
     for i in range(padded.shape[0]):
         x = padded[i, pad_size[1][0]:padded.shape[1] -
-                   pad_size[1][1], pad_size[2][0]:padded.shape[2] -
-                   pad_size[2][1], 1]
+                                     pad_size[1][1], pad_size[2][0]:padded.shape[2] -
+                                                                    pad_size[2][1], 1]
     unpad = np.repeat(x.reshape((axis1_dim, axis2_dim, 1)), 3, axis=2)
     unpad = unpad[np.newaxis, :]
     return unpad
 
 
-def db_to_amplitude(mag_db, amin=1 / (2**16), normalize=True):
+def db_to_amplitude(mag_db, amin=1 / (2 ** 16), normalize=True):
     if (normalize):
         mag_db *= 20 * np.log1p(1 / amin)
     return amin * np.expm1(mag_db / 20)
@@ -103,7 +103,7 @@ def load_audio(filename, sr=22050):
     return librosa.load(filename, sr=sr)[0]
 
 
-def amplitude_to_db(mag, amin=1 / (2**16), normalize=True):
+def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
     mag_db = 20 * np.log1p(mag / amin)
     if (normalize):
         mag_db /= 20 * np.log1p(1 / amin)
@@ -116,8 +116,8 @@ def slice_first_dim(array, slice_size):
 
     last_mag = np.zeros(shape=(1, array.shape[0], slice_size, array.shape[2]))
     last_mag[:, :, :array.shape[1] -
-             (n_sections * slice_size), :] = array[:, n_sections *
-                                                   int(slice_size):, :]
+                    (n_sections * slice_size), :] = array[:, n_sections *
+                                                             int(slice_size):, :]
     if (n_sections > 0):
         array = np.expand_dims(array, axis=0)
         sliced = np.split(array[:, :, 0:n_sections * slice_size, :],
@@ -134,3 +134,22 @@ def slice_first_dim(array, slice_size):
 def slice_magnitude(mag, slice_size):
     magnitudes = np.stack([mag], axis=2)
     return slice_first_dim(magnitudes, slice_size)
+
+
+def unet_padding_size(length, pool_size, layers=4):
+    output = length
+    for _ in range(layers):
+        output = int(np.ceil(output / pool_size))
+
+    padding = output * (pool_size ** layers) - length
+    lpad = int(np.ceil(padding / 2))
+    rpad = int(np.floor(padding / 2))
+
+    return lpad, rpad
+
+
+def crop(image, crop_size):
+    lpad = crop_size[1][0]
+    rpad = crop_size[1][1]
+    image = image[:, lpad:-rpad]
+    return image

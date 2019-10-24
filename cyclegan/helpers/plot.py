@@ -107,7 +107,7 @@ def plot_stft(npy, output_dir=None):
 
 
 def plot_heat_map(img, title, save_dir=None):
-    img = img[:, :, 0]
+    img = img[0, :, :, 0]
     img = (img + 1) / 2
 
     ax = sns.heatmap(img, vmin=0, vmax=1)

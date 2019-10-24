@@ -6,7 +6,7 @@ sys.path.append(workspace)
 
 from .generator import get_model as Generator
 from .discrminator import get_model as Discriminator
-from cyclegan.helpers.utils import unet_padding_size, crop
+from cyclegan.helpers.signal import unet_padding_size, crop
 from cyclegan.helpers.plot import plot_heat_map
 import numpy as np
 import matplotlib.pyplot as plt

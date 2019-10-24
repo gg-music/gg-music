@@ -5,7 +5,7 @@ from .helpers import signal
 from .model_settings import *
 from .settings import DEFAULT_SAMPLING_RATE
 import numpy as np
-from .helpers.utils import unet_padding_size
+from cyclegan.helpers.signal import unet_padding_size
 
 
 def get_input_shape_sliced(dim, pad_size):
