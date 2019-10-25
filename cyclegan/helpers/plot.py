@@ -31,6 +31,7 @@ def plot_epoch_loss(hist, save_dir, n_steps):
     plt.tight_layout()
     plt.savefig(output_path, format='png', bbox_inches='tight')
 
+
 # Plot and save keras trainning history
 def plot_save_history(hist, save_dir):
     plt.figure(figsize=(15, 7))

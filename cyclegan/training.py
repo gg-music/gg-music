@@ -10,7 +10,11 @@ from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-m', '--model', required=True, help='your model name', type=str)
+ap.add_argument('-m',
+                '--model',
+                required=True,
+                help='your model name',
+                type=str)
 args = ap.parse_args()
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
@@ -25,13 +29,16 @@ y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
 
 steps = min(len(x_list), len(y_list))
 
-x_train_dataset = tf.data.TFRecordDataset(x_list[1:steps]).prefetch(buffer_size=100)
-y_train_dataset = tf.data.TFRecordDataset(y_list[1:steps]).prefetch(buffer_size=100)
+x_train_dataset = tf.data.TFRecordDataset(
+    x_list[1:steps]).prefetch(buffer_size=100)
+y_train_dataset = tf.data.TFRecordDataset(
+    y_list[1:steps]).prefetch(buffer_size=100)
 
 x_test_dataset = tf.data.TFRecordDataset(x_list[0])
 y_test_dataset = tf.data.TFRecordDataset(y_list[0])
 
-for example_x, example_y in tf.data.Dataset.zip((x_test_dataset, y_test_dataset)):
+for example_x, example_y in tf.data.Dataset.zip(
+    (x_test_dataset, y_test_dataset)):
     example_x = tf.train.Example.FromString(example_x.numpy())
     example_y = tf.train.Example.FromString(example_y.numpy())
     test_x = extract_example(example_x)
@@ -59,33 +66,48 @@ start = len(ckpt_manager.checkpoints)
 for epoch in range(start, EPOCHS):
     plot_heat_map(test_x['data'],
                   title='{}_reference'.format(x_instrument),
-                  save_dir=os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(x_instrument, y_instrument)))
+                  save_dir=os.path.join(
+                      SAVE_MODEL_PATH,
+                      '{}_to_{}'.format(x_instrument, y_instrument)))
 
     plot_heat_map(test_y['data'],
                   title='{}_reference'.format(y_instrument),
-                  save_dir=os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(y_instrument, x_instrument)))
+                  save_dir=os.path.join(
+                      SAVE_MODEL_PATH,
+                      '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
+    loss_history = {'gG': [], 'fG': [], 'xD': [], 'yD': []}
+
     n = 0
-    for example_x, example_y in tf.data.Dataset.zip((x_train_dataset, y_train_dataset)):
+    for example_x, example_y in tf.data.Dataset.zip(
+        (x_train_dataset, y_train_dataset)):
         example_x = tf.train.Example.FromString(example_x.numpy())
         example_y = tf.train.Example.FromString(example_y.numpy())
         image_x = extract_example(example_x)
         image_y = extract_example(example_y)
 
-        loss_history = train_step(image_x['data'], image_y['data'])
-
+        gG, fG, xD, yD = train_step(image_x['data'], image_y['data'])
+        loss_history['gG'].append(gG.numpy())
+        loss_history['fG'].append(fG.numpy())
+        loss_history['xD'].append(xD.numpy())
+        loss_history['yD'].append(yD.numpy())
         prediction_g = generator_g(test_x['data'])
         if n % 100 == 0:
-            plot_heat_map(prediction_g,
-                          '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                          os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(x_instrument, y_instrument)))
+            plot_heat_map(
+                prediction_g,
+                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH,
+                             '{}_to_{}'.format(x_instrument, y_instrument)))
             prediction_f = generator_f(test_y['data'])
-            plot_heat_map(prediction_f,
-                          '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                          os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(y_instrument, x_instrument)))
+            plot_heat_map(
+                prediction_f,
+                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH,
+                             '{}_to_{}'.format(y_instrument, x_instrument)))
 
-            plot_epoch_loss(loss_history, os.path.join(SAVE_MODEL_PATH, 'loss'), n)
+            plot_epoch_loss(loss_history, os.path.join(SAVE_MODEL_PATH, 'loss'),
+                            n)
 
         if n % 10 == 0:
             print("epoch {} step {}".format(epoch + 1, n))

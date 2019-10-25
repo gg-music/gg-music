@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
 from .model.pix2pix import discriminator as Discriminator
-from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss, get_loss_raw
+from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
 
 # Generator G translates X -> Y
 # Generator F translates Y -> X.
@@ -20,10 +20,8 @@ with tf.device("/gpu:1"):
                             classes=3,
                             activation='tanh')
 
-
     discriminator_x = Discriminator(norm_type='instancenorm', target=False)
     discriminator_y = Discriminator(norm_type='instancenorm', target=False)
-
 
     generator_g_optimizer = Adam(2e-4, beta_1=0.5)
     generator_f_optimizer = Adam(2e-4, beta_1=0.5)
@@ -31,14 +29,9 @@ with tf.device("/gpu:1"):
     discriminator_x_optimizer = Adam(2e-4, beta_1=0.5)
     discriminator_y_optimizer = Adam(2e-4, beta_1=0.5)
 
+
 @tf.function
 def train_step(real_x, real_y):
-    loss_history = {
-        'gG': [],
-        'fG': [],
-        'xD': [],
-        'yD': []
-    }
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:
@@ -64,13 +57,12 @@ def train_step(real_x, real_y):
             disc_fake_x = discriminator_x(fake_x, training=True)
             disc_fake_y = discriminator_y(fake_y, training=True)
 
-
             # calculate the loss
             gen_g_loss = generator_loss(disc_fake_y)
             gen_f_loss = generator_loss(disc_fake_x)
 
-            total_cycle_loss = calc_cycle_loss(real_x, cycled_x) + calc_cycle_loss(
-                real_y, cycled_y)
+            total_cycle_loss = calc_cycle_loss(
+                real_x, cycled_x) + calc_cycle_loss(real_y, cycled_y)
 
             # Total generator loss = adversarial loss + cycle loss
             total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss(
@@ -80,11 +72,6 @@ def train_step(real_x, real_y):
 
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
-
-            loss_history['gG'].append(get_loss_raw(gen_g_loss))
-            loss_history['fG'].append(get_loss_raw(gen_f_loss))
-            loss_history['xD'].append(get_loss_raw(disc_x_loss))
-            loss_history['yD'].append(get_loss_raw(disc_y_loss))
     # Calculate the gradients for generator and discriminator
     with tf.device('/gpu:0'):
         generator_g_gradients = tape.gradient(total_gen_g_loss,
@@ -100,7 +87,6 @@ def train_step(real_x, real_y):
         discriminator_y_gradients = tape.gradient(
             disc_y_loss, discriminator_y.trainable_variables)
 
-
         # Apply the gradients to the optimizer
         generator_g_optimizer.apply_gradients(
             zip(generator_g_gradients, generator_g.trainable_variables))
@@ -108,11 +94,10 @@ def train_step(real_x, real_y):
         generator_f_optimizer.apply_gradients(
             zip(generator_f_gradients, generator_f.trainable_variables))
 
-
         discriminator_x_optimizer.apply_gradients(
             zip(discriminator_x_gradients, discriminator_x.trainable_variables))
 
         discriminator_y_optimizer.apply_gradients(
             zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
-    return loss_history
+        return gen_g_loss, gen_f_loss, disc_x_loss, disc_y_loss
