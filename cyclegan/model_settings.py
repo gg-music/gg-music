@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
 from .model.pix2pix import discriminator as Discriminator
-from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
+from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss, get_loss_raw
 
 # Generator G translates X -> Y
 # Generator F translates Y -> X.
@@ -81,10 +81,10 @@ def train_step(real_x, real_y):
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
 
-            loss_history['gG'].append(gen_g_loss)
-            loss_history['fG'].append(gen_f_loss)
-            loss_history['xD'].append(disc_x_loss)
-            loss_history['yD'].append(disc_y_loss)
+            loss_history['gG'].append(get_loss_raw(gen_g_loss))
+            loss_history['fG'].append(get_loss_raw(gen_f_loss))
+            loss_history['xD'].append(get_loss_raw(disc_x_loss))
+            loss_history['yD'].append(get_loss_raw(disc_y_loss))
     # Calculate the gradients for generator and discriminator
     with tf.device('/gpu:0'):
         generator_g_gradients = tape.gradient(total_gen_g_loss,
