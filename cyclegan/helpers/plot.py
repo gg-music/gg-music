@@ -18,14 +18,14 @@ def plot_epoch_loss(hist, save_dir, n_steps):
     plt.subplot(1, 2, 2)
     plt.plot(hist['xD'], label='discrminator_X_loss')
     plt.plot(hist['yD'], label='discrminator_y_loss')
-    plt.title(f'Discrminator Loss-{n_steps}')
+    plt.title(f'Discrminator Loss-{n_steps:04}')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
 
     make_dirs(save_dir)
 
-    output_path = os.path.join(save_dir, str(n_steps) + '-loss.png')
+    output_path = os.path.join(save_dir, f'{n_steps:04} + '-loss.png')
 
     plt.savefig(output_path, format='png', dpi=100)
 
