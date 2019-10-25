@@ -16,7 +16,6 @@ args = ap.parse_args()
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 
 make_dirs(SAVE_MODEL_PATH)
-make_dirs(os.path.join(SAVE_MODEL_PATH, 'loss'))
 
 x_instrument = 'cello'
 y_instrument = 'sax'
