@@ -9,7 +9,7 @@ from .helpers.utils import get_file_list, make_dirs
 from .helpers.example_protocol import extract_example
 from .helpers.plot import plot_heat_map, plot_epoch_loss
 from .model_settings import *
-from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
+from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH, STEPS
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-m',
@@ -29,13 +29,11 @@ y_instrument = 'sax'
 x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
 y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
 
-steps = 500
+x_train_dataset = tf.data.TFRecordDataset(x_list[:STEPS]).prefetch(buffer_size=100)
+y_train_dataset = tf.data.TFRecordDataset(y_list[:STEPS]).prefetch(buffer_size=100)
 
-x_train_dataset = tf.data.TFRecordDataset(x_list[:steps]).prefetch(buffer_size=100)
-y_train_dataset = tf.data.TFRecordDataset(y_list[:steps]).prefetch(buffer_size=100)
-
-x_test_dataset = tf.data.TFRecordDataset(x_list[steps])
-y_test_dataset = tf.data.TFRecordDataset(y_list[steps])
+x_test_dataset = tf.data.TFRecordDataset(x_list[STEPS])
+y_test_dataset = tf.data.TFRecordDataset(y_list[STEPS])
 
 
 for example_x, example_y in tf.data.Dataset.zip(
@@ -89,7 +87,7 @@ for epoch in range(start, EPOCHS):
     loss_history = {'gG': [], 'fG': [], 'xD': [], 'yD': []}
 
     n = 0
-    pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)), total=steps)
+    pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)), total=STEPS)
     for example_x, example_y in pbar:
         example_x = tf.train.Example.FromString(example_x.numpy())
         example_y = tf.train.Example.FromString(example_y.numpy())
