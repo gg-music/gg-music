@@ -1,5 +1,20 @@
 import librosa
 import numpy as np
+from ..settings import DEFAULT_SAMPLING_RATE
+
+
+def splitsongs(X, window=0.1, overlap=0.5):
+    temp_X = []
+
+    xshape = X.shape[0]
+    chunk = int(xshape * window)
+    offset = int(chunk * (1. - overlap))
+
+    spsong = [X[i:i + chunk] for i in range(0, xshape - chunk + offset, offset)]
+    for s in spsong:
+        temp_X.append(s)
+
+    return np.array(temp_X)
 
 
 def to_melspectrogram(songs, n_fft=1024, hop_length=512):
@@ -8,6 +23,12 @@ def to_melspectrogram(songs, n_fft=1024, hop_length=512):
 
     tsongs = map(melspec, songs)
     return np.array(list(tsongs))
+
+
+def add_hf(mag, target_shape):
+    rec = np.zeros(target_shape)
+    rec[0:mag.shape[0], 0:mag.shape[1]] = mag
+    return rec
 
 
 def remove_hf(mag):
@@ -25,66 +46,7 @@ def to_stft(audio, nfft=1024, normalize=True, crop_hf=True):
     return mag, phase
 
 
-def splitsongs(X, window=0.1, overlap=0.5):
-    temp_X = []
-
-    xshape = X.shape[0]
-    chunk = int(xshape * window)
-    offset = int(chunk * (1. - overlap))
-
-    spsong = [X[i:i + chunk] for i in range(0, xshape - chunk + offset, offset)]
-    for s in spsong:
-        temp_X.append(s)
-
-    return np.array(temp_X)
-
-
-def add_hf(mag, target_shape):
-    rec = np.zeros(target_shape)
-    rec[0:mag.shape[0], 0:mag.shape[1]] = mag
-    return rec
-
-
-def write_audio(filename, audio, sr=44100):
-    librosa.output.write_wav(filename, audio, sr, norm=True)
-
-
-def join_magnitude_slices(mag_sliced, target_shape, pad_size):
-    mag = np.zeros(
-        (mag_sliced.shape[1], mag_sliced.shape[0] * mag_sliced.shape[2]))
-    print('before', mag.shape)
-    for i in range(mag_sliced.shape[0]):
-        mag[:, (i) * mag_sliced.shape[2]:(i + 1) *
-            mag_sliced.shape[2]] = mag_sliced[i, :, :, 1]
-    print('progressing', mag.shape)
-    # mag = mag[pad_size[1][0]:target_shape[0] -
-    #   pad_size[1][1], pad_size[2][0]:target_shape[1] - pad_size[2][1]]
-    mag = mag[0:target_shape[0], 0:target_shape[1]]
-
-    print('after', mag.shape)
-    return mag
-
-
-def unpad_to_raw(padded, pad_size):
-    axis1_dim = padded.shape[1] - np.sum(pad_size[1])
-    axis2_dim = padded.shape[2] - np.sum(pad_size[2])
-    x = np.zeros((axis1_dim, axis2_dim))
-    for i in range(padded.shape[0]):
-        x = padded[i, pad_size[1][0]:padded.shape[1] -
-                   pad_size[1][1], pad_size[2][0]:padded.shape[2] -
-                   pad_size[2][1], 1]
-    unpad = np.repeat(x.reshape((axis1_dim, axis2_dim, 1)), 3, axis=2)
-    unpad = unpad[np.newaxis, :]
-    return unpad
-
-
-def db_to_amplitude(mag_db, amin=1 / (2**16), normalize=True):
-    if (normalize):
-        mag_db *= 20 * np.log1p(1 / amin)
-    return amin * np.expm1(mag_db / 20)
-
-
-def inverse_transform(mag, phase, nfft=1024, normalize=True, crop_hf=True):
+def inverse_stft(mag, phase, nfft=1024, normalize=True, crop_hf=True):
     window = np.hanning(nfft)
     if (normalize):
         mag = mag * np.sum(np.hanning(nfft)) / 2
@@ -95,42 +57,51 @@ def inverse_transform(mag, phase, nfft=1024, normalize=True, crop_hf=True):
     return audio
 
 
-def write_audio(filename, audio, sr=44100):
-    librosa.output.write_wav(filename, audio, sr, norm=True)
+def join_magnitude_slices(mag_sliced, target_shape):
+    mag = np.zeros((mag_sliced.shape[1], mag_sliced.shape[0] * mag_sliced.shape[2]))
+    for i in range(mag_sliced.shape[0]):
+        mag[:, (i) * mag_sliced.shape[2]:(i + 1) * mag_sliced.shape[2]] = mag_sliced[i, :, :, 0]
+    mag = mag[0:target_shape[0], 0:target_shape[1]]
+    return mag
 
 
-def load_audio(filename, sr=22050):
-    return librosa.load(filename, sr=sr)[0]
-
-
-def amplitude_to_db(mag, amin=1 / (2**16), normalize=True):
+def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
     mag_db = 20 * np.log1p(mag / amin)
     if (normalize):
         mag_db /= 20 * np.log1p(1 / amin)
     return mag_db
 
 
-def slice_first_dim(array, slice_size):
-    n_sections = int(np.floor(array.shape[1] / slice_size))
-    has_last_mag = n_sections * slice_size < array.shape[1]
-
-    last_mag = np.zeros(shape=(1, array.shape[0], slice_size, array.shape[2]))
-    last_mag[:, :, :array.shape[1] -
-             (n_sections * slice_size), :] = array[:, n_sections *
-                                                   int(slice_size):, :]
-    if (n_sections > 0):
-        array = np.expand_dims(array, axis=0)
-        sliced = np.split(array[:, :, 0:n_sections * slice_size, :],
-                          n_sections,
-                          axis=2)
-        sliced = np.concatenate(sliced, axis=0)
-        if (has_last_mag):  # Check for reminder
-            sliced = np.concatenate([sliced, last_mag], axis=0)
-    else:
-        sliced = last_mag
-    return sliced
+def db_to_amplitude(mag_db, amin=1 / (2 ** 16), normalize=True):
+    if (normalize):
+        mag_db *= 20 * np.log1p(1 / amin)
+    return amin * np.expm1(mag_db / 20)
 
 
-def slice_magnitude(mag, slice_size):
-    magnitudes = np.stack([mag], axis=2)
-    return slice_first_dim(magnitudes, slice_size)
+def load_audio(filename, sr=DEFAULT_SAMPLING_RATE):
+    return librosa.load(filename, sr=sr)[0]
+
+
+def write_audio(filename, audio, sr=DEFAULT_SAMPLING_RATE):
+    librosa.output.write_wav(filename, audio, sr, norm=True)
+
+
+def unet_padding_size(length, pool_size, layers=4):
+    output = length
+    for _ in range(layers):
+        output = int(np.ceil(output / pool_size))
+
+    padding = output * (pool_size ** layers) - length
+    lpad = int(np.ceil(padding / 2))
+    rpad = int(np.floor(padding / 2))
+
+    return lpad, rpad
+
+
+def crop(image, crop_size):
+    upad = crop_size[0][0]
+    dpad = crop_size[0][1]
+    lpad = crop_size[1][0]
+    rpad = crop_size[1][1]
+    image = image[:, upad:image.shape[1] - dpad, lpad:image.shape[2] - rpad, :]
+    return image

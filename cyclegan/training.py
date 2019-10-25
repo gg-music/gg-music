@@ -3,9 +3,9 @@ import os
 import argparse
 import tensorflow as tf
 
-from .helpers.data_generator import GanSequence
 from .helpers.utils import get_file_list, make_dirs
-from .helpers.plot import plot_heat_map
+from .helpers.example_protocol import extract_example
+from .helpers.plot import plot_heat_map, plot_epoch_loss
 from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
 
@@ -18,20 +18,31 @@ ap.add_argument('-m',
 args = ap.parse_args()
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
+
 make_dirs(SAVE_MODEL_PATH)
 
-piano_train_list = get_file_list(MUSIC_NPY_PATH['piano2_cleaned'])
-guitar_train_list = get_file_list(MUSIC_NPY_PATH['guitar2_cleaned'])
-piano_test_list = get_file_list(MUSIC_NPY_PATH['piano1_cleaned'])
-guitar_test_list = get_file_list(MUSIC_NPY_PATH['guitar1_cleaned'])
+x_instrument = 'cello'
+y_instrument = 'sax'
 
+x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
+y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
 
+steps = min(len(x_list), len(y_list))
 
+x_train_dataset = tf.data.TFRecordDataset(
+    x_list[1:steps]).prefetch(buffer_size=100)
+y_train_dataset = tf.data.TFRecordDataset(
+    y_list[1:steps]).prefetch(buffer_size=100)
 
-piano_data_gen = GanSequence(piano_train_list, batch_size=1, shuffle=True)
-guitar_data_gen = GanSequence(guitar_train_list, batch_size=1, shuffle=True)
-piano_test_gen = GanSequence(piano_test_list, batch_size=1, shuffle=False)
-guitar_test_gen = GanSequence(guitar_test_list, batch_size=1, shuffle=False)
+x_test_dataset = tf.data.TFRecordDataset(x_list[0])
+y_test_dataset = tf.data.TFRecordDataset(y_list[0])
+
+for example_x, example_y in tf.data.Dataset.zip(
+    (x_test_dataset, y_test_dataset)):
+    example_x = tf.train.Example.FromString(example_x.numpy())
+    example_y = tf.train.Example.FromString(example_y.numpy())
+    test_x = extract_example(example_x)
+    test_y = extract_example(example_y)
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -46,8 +57,6 @@ ckpt_manager = tf.train.CheckpointManager(ckpt,
                                           SAVE_MODEL_PATH,
                                           max_to_keep=100)
 
-# if a checkpoint exists, restore the latest checkpoint.
-
 if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
@@ -55,27 +64,50 @@ if ckpt_manager.latest_checkpoint:
 
 start = len(ckpt_manager.checkpoints)
 for epoch in range(start, EPOCHS):
-    plot_heat_map(piano_test_gen[0][0, :, :, :],
-                  title='piano_reference',
-                  save_dir=os.path.join(SAVE_MODEL_PATH, 'piano_to_guitar'))
+    plot_heat_map(test_x['data'],
+                  title='{}_reference'.format(x_instrument),
+                  save_dir=os.path.join(
+                      SAVE_MODEL_PATH,
+                      '{}_to_{}'.format(x_instrument, y_instrument)))
 
-    plot_heat_map(guitar_test_gen[0][0, :, :, :],
-                  title='guitar_reference',
-                  save_dir=os.path.join(SAVE_MODEL_PATH, 'guitar_to_piano'))
+    plot_heat_map(test_y['data'],
+                  title='{}_reference'.format(y_instrument),
+                  save_dir=os.path.join(
+                      SAVE_MODEL_PATH,
+                      '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
-    n = 0
-    for image_x, image_y in zip(piano_data_gen, guitar_data_gen):
-        train_step(image_x, image_y)
+    loss_history = {'gG': [], 'fG': [], 'xD': [], 'yD': []}
 
-        prediction_g = generator_g(piano_test_gen[0])
-        plot_heat_map(prediction_g[0],
-                      'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                      os.path.join(SAVE_MODEL_PATH, 'piano_to_guitar'))
-        prediction_f = generator_f(guitar_test_gen[0])
-        plot_heat_map(prediction_f[0],
-                      'epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
-                      os.path.join(SAVE_MODEL_PATH, 'guitar_to_piano'))
+    n = 0
+    for example_x, example_y in tf.data.Dataset.zip(
+        (x_train_dataset, y_train_dataset)):
+        example_x = tf.train.Example.FromString(example_x.numpy())
+        example_y = tf.train.Example.FromString(example_y.numpy())
+        image_x = extract_example(example_x)
+        image_y = extract_example(example_y)
+
+        gG, fG, xD, yD = train_step(image_x['data'], image_y['data'])
+        loss_history['gG'].append(gG.numpy())
+        loss_history['fG'].append(fG.numpy())
+        loss_history['xD'].append(xD.numpy())
+        loss_history['yD'].append(yD.numpy())
+        prediction_g = generator_g(test_x['data'])
+        if n % 100 == 0:
+            plot_heat_map(
+                prediction_g,
+                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH,
+                             '{}_to_{}'.format(x_instrument, y_instrument)))
+            prediction_f = generator_f(test_y['data'])
+            plot_heat_map(
+                prediction_f,
+                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH,
+                             '{}_to_{}'.format(y_instrument, x_instrument)))
+
+            plot_epoch_loss(loss_history, os.path.join(SAVE_MODEL_PATH, 'loss'),
+                            n)
 
         if n % 10 == 0:
             print("epoch {} step {}".format(epoch + 1, n))

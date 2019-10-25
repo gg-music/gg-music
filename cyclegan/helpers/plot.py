@@ -7,6 +7,31 @@ from . import signal
 from .utils import make_dirs
 
 
+def plot_epoch_loss(hist, save_dir, n_steps):
+    plt.figure(figsize=(15, 7))
+    plt.subplot(1, 2, 1)
+    plt.plot(hist['gG'], label='generator_G_loss')
+    plt.plot(hist['fG'], label='generator_F_loss')
+    plt.title(f'Generator Loss-{n_steps}')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(hist['xD'], label='discrminator_X_loss')
+    plt.plot(hist['yD'], label='discrminator_y_loss')
+    plt.title(f'Discrminator Loss-{n_steps}')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    make_dirs(save_dir)
+    output_path = os.path.join(save_dir, str(n_steps) + '-loss.png')
+
+    plt.tight_layout()
+    plt.savefig(output_path, format='png', bbox_inches='tight')
+
+
 # Plot and save keras trainning history
 def plot_save_history(hist, save_dir):
     plt.figure(figsize=(15, 7))
@@ -107,7 +132,7 @@ def plot_stft(npy, output_dir=None):
 
 
 def plot_heat_map(img, title, save_dir=None):
-    img = img[:, :, 0]
+    img = img[0, :, :, 0]
     img = (img + 1) / 2
 
     ax = sns.heatmap(img, vmin=0, vmax=1)

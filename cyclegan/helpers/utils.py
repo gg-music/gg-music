@@ -1,4 +1,3 @@
-import json
 import os
 from functools import partial
 from multiprocessing import Pool, cpu_count
@@ -6,9 +5,25 @@ from multiprocessing import Pool, cpu_count
 import audioread
 import librosa
 import numpy as np
-from scipy import stats
+import tensorflow as tf
 
-from .signal import splitsongs
+from .example_protocol import np_array_to_example
+from .signal import splitsongs, amplitude_to_db
+from ..settings import PAD_SIZE, DEFAULT_SAMPLING_RATE
+
+
+def get_file_list(src_dir):
+    input_path = []
+    for dir_path, subdir, filenames in os.walk(src_dir):
+        for f in filenames:
+            input_path.append(os.path.join(dir_path, f))
+
+    return input_path
+
+
+def make_dirs(path):
+    if not os.path.isdir(path):
+        os.makedirs(path, mode=0o777)
 
 
 def batch(iterable, n=1):
@@ -20,11 +35,10 @@ def batch(iterable, n=1):
 def parallel_preprocessing(song_list,
                            output_dir,
                            spec_format=None,
-                           category=None,
                            batch_size=10,
                            **kwargs):
-    par = partial(preprocessing,
-                  category=category,
+
+    par = partial(batch_preprocessing,
                   output_dir=output_dir,
                   spec_format=spec_format,
                   **kwargs)
@@ -38,109 +52,69 @@ def parallel_preprocessing(song_list,
     pool.join()
 
 
-def preprocessing(batch_file_path,
-                  output_dir,
-                  spec_format,
-                  category,
-                  trim=None,
-                  split=None):
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir, mode=0o777)
-
+def batch_preprocessing(batch_file_path,
+                        output_dir,
+                        spec_format,
+                        **kwargs):
     for file_path in batch_file_path:
-        arr_specs = []
+        batch_specs = []
         try:
-            signal, sr = librosa.load(file_path)
-            if trim:
-                trim_length = sr * trim
-                signal = signal[:trim_length]
+            specs, _ = preprocessing_fn(file_path,
+                                     spec_format,
+                                     **kwargs)
 
-            if split:
-                signal = splitsongs(signal, window=split)
-
-            specs, _ = spec_format(signal)
         except ValueError:
+            os.remove(file_path)
+            print("\nremove zero file: " + file_path + "\n")
             continue
-        except audioread.exceptions.NoBackendError:
+        except audioread.exceptions.NoBackendError as err:
+            print("\n", err, file_path, "\n")
             continue
 
-        arr_specs.extend(specs)
+        batch_specs.append(specs)
+        batch_specs = np.array(batch_specs)
 
         file_name = os.path.basename(file_path).split('.')[-2]
-
-        if not category:
-            category = os.path.dirname(file_path).split('/')[-1]
-
+        category = os.path.dirname(file_path).split('/')[-1]
         category_dir = os.path.join(output_dir, category)
 
-        if not os.path.isdir(category_dir):
-            os.mkdir(category_dir, mode=0o777)
-        save_file = os.path.join(category_dir, '{}.npy'.format(file_name))
+        make_dirs(category_dir)
+        save_file = os.path.join(category_dir, '{}.tfrecords'.format(file_name))
+        with tf.device('/cpu:0'):
+            with tf.io.TFRecordWriter(save_file) as writer:
+                tf_example = np_array_to_example(batch_specs, save_file)
+                writer.write(tf_example)
 
-        np.save(save_file, arr_specs)
         print('{}'.format(save_file))
 
 
-def get_file_list(src_dir, catalog_offset=0):
-    input_path = []
-    category = []
-    for dir_path, subdir, filenames in os.walk(src_dir):
-        for f in filenames:
-            input_path.append(os.path.join(dir_path, f))
+def preprocessing_fn(file_path,
+                     spec_format,
+                     trim=None,
+                     split=None,
+                     convert_db=True,
+                     pad_size=PAD_SIZE):
+    signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
+    if trim:
+        trim_length = sr * trim
+        signal = signal[:trim_length]
 
-            if catalog_offset:
-                dir_array = dir_path.split('/')
-                cat = dir_array[catalog_offset]
-                reverse_mapping = load_mapping(reverse=True)
-                category.append(reverse_mapping[cat])
+    if split:
+        signal = splitsongs(signal, window=split)
 
-    if catalog_offset:
-        return input_path, category
-    else:
-        return input_path
+    mag, phase = spec_format(signal)
 
+    if np.max(mag) == 0:
+        raise ValueError
 
-def load_mapping(reverse=False):
-    file = '/home/gtzan/category_label_mapping.json'
-    with open(file, 'r') as f:
-        mapping = json.load(f)
+    if convert_db:
+        mag = amplitude_to_db(mag)
+        mag = (mag * 2) - 1
 
-    if reverse:
-        reverse_mapping = {v: k for k, v in mapping.items()}
-        return reverse_mapping
-    else:
-        return mapping
+    if pad_size:
+        mag = np.pad(mag, pad_size)
+        mag = np.repeat(mag[:, :, np.newaxis], 3, axis=2)
 
-
-def pred_to_y(pred, n_song, split_per_song):
-    total = n_song * split_per_song
-    max_prob = np.argmax(pred, axis=1)
-    group_by_song = np.array(max_prob[:total]).reshape((n_song, split_per_song))
-    song_mode = stats.mode(group_by_song, axis=1)
-    y_pred = np.array(song_mode[0]).reshape(n_song,)
-
-    return y_pred
+    return mag, phase
 
 
-def unet_padding_size(length, pool_size, layers=4):
-    output = length
-    for _ in range(layers):
-        output = int(np.ceil(output / pool_size))
-
-    padding = output * (pool_size**layers) - length
-    lpad = int(np.ceil(padding / 2))
-    rpad = int(np.floor(padding / 2))
-
-    return lpad, rpad
-
-
-def crop(image, crop_size):
-    lpad = crop_size[1][0]
-    rpad = crop_size[1][1]
-    image = image[:, lpad:-rpad]
-    return image
-
-
-def make_dirs(path):
-    if not os.path.isdir(path):
-        os.makedirs(path, mode=0o777)
