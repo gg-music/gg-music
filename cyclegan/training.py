@@ -1,6 +1,6 @@
 import time
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import tensorflow as tf
 from tqdm import tqdm
@@ -77,6 +77,8 @@ for epoch in range(start, EPOCHS):
         image_y = extract_example(example_y)
 
         train_step(image_x['data'], image_y['data'], update='gfd')
+        train_step(image_x['data'], image_y['data'], update='d')
+        train_step(image_x['data'], image_y['data'], update='d')
         train_step(image_x['data'], image_y['data'], update='d')
 
         prediction_g = generator_g(test_x['data'])
