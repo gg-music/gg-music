@@ -4,13 +4,13 @@ import seaborn as sns
 from .utils import make_dirs
 
 
-def plot_epoch_loss(hist, save_dir, n_steps):
+def plot_epoch_loss(hist, save_dir, n_steps, n_epoch):
     for model_type, models in hist.items():
         plt.figure(figsize=(4, 4), dpi=100)
         for model, npy in models.items():
             plt.plot(npy, label=f'{model_type}_{model}_loss')
 
-        plt.title(f'{model_type} Loss-{n_steps:04}')
+        plt.title(f'{model_type} Loss-{n_steps:04} Epoch-{n_epoch:02}')
         plt.xlabel('Steps')
         plt.ylabel('Loss')
         plt.legend()
@@ -18,7 +18,7 @@ def plot_epoch_loss(hist, save_dir, n_steps):
         make_dirs(f'{save_dir}/{model_type}_loss')
 
         output_path = os.path.join(f'{save_dir}/{model_type}_loss',
-                                   f'{n_steps:04}-loss.png')
+                                   f'epoch{n_epoch:02}_{n_steps:04}-loss.png')
         plt.savefig(output_path, format='png', dpi=100)
         plt.close()
 

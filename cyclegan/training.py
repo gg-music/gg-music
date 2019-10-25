@@ -89,7 +89,16 @@ for epoch in range(start, EPOCHS):
                       '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
-    loss_history = {'Generator': {'f': [], 'g': []}, 'Discriminator': {'x': [], 'y': []}}
+    loss_history = {
+        'Generator': {
+            'f': [],
+            'g': []
+        },
+        'Discriminator': {
+            'x': [],
+            'y': []
+        }
+    }
 
     n = 0
     pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)),
@@ -126,7 +135,7 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_MODEL_PATH,
                              '{}_to_{}'.format(y_instrument, x_instrument)))
 
-            plot_epoch_loss(loss_history, SAVE_MODEL_PATH, n)
+            plot_epoch_loss(loss_history, SAVE_MODEL_PATH, n, epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
