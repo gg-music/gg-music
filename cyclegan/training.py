@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from .helpers.utils import get_file_list, make_dirs
 from .helpers.example_protocol import extract_example
-from .helpers.plot import plot_heat_map
+from .helpers.plot import plot_heat_map, plot_epoch_loss
 from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH
 
@@ -14,7 +14,9 @@ ap.add_argument('-m', '--model', required=True, help='your model name', type=str
 args = ap.parse_args()
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
+
 make_dirs(SAVE_MODEL_PATH)
+make_dirs(os.path.join(SAVE_MODEL_PATH, 'loss'))
 
 x_instrument = 'cello'
 y_instrument = 'sax'
@@ -72,7 +74,7 @@ for epoch in range(start, EPOCHS):
         image_x = extract_example(example_x)
         image_y = extract_example(example_y)
 
-        train_step(image_x['data'], image_y['data'])
+        loss_history = train_step(image_x['data'], image_y['data'])
 
         prediction_g = generator_g(test_x['data'])
         if n % 100 == 0:
@@ -83,6 +85,8 @@ for epoch in range(start, EPOCHS):
             plot_heat_map(prediction_f,
                           '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
                           os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(y_instrument, x_instrument)))
+
+            plot_epoch_loss(loss_history, os.path.join(SAVE_MODEL_PATH, 'loss'), n)
 
         if n % 10 == 0:
             print("epoch {} step {}".format(epoch + 1, n))

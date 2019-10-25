@@ -31,9 +31,14 @@ with tf.device("/gpu:1"):
     discriminator_x_optimizer = Adam(2e-4, beta_1=0.5)
     discriminator_y_optimizer = Adam(2e-4, beta_1=0.5)
 
-
 @tf.function
 def train_step(real_x, real_y):
+    loss_history = {
+        'gG': [],
+        'fG': [],
+        'xD': [],
+        'yD': []
+    }
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:
@@ -76,6 +81,10 @@ def train_step(real_x, real_y):
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
 
+            loss_history['gG'].append(gen_g_loss)
+            loss_history['fG'].append(gen_f_loss)
+            loss_history['xD'].append(disc_x_loss)
+            loss_history['yD'].append(disc_y_loss)
     # Calculate the gradients for generator and discriminator
     with tf.device('/gpu:0'):
         generator_g_gradients = tape.gradient(total_gen_g_loss,
@@ -105,3 +114,5 @@ def train_step(real_x, real_y):
 
         discriminator_y_optimizer.apply_gradients(
             zip(discriminator_y_gradients, discriminator_y.trainable_variables))
+
+    return loss_history

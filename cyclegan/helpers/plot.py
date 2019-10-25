@@ -7,6 +7,27 @@ from . import signal
 from .utils import make_dirs
 
 
+def plot_epoch_loss(hist, save_dir, n_steps):
+    plt.figure(figsize=(15, 7))
+    plt.subplot(1, 2, 1)
+    plt.plot(hist.gG, label='generator_G_loss')
+    plt.plot(hist.fG, label='generator_F_loss')
+    plt.title(f'Generator Loss-{n_steps}')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(hist.xD, label='discrminator_X_loss')
+    plt.plot(hist.yD, label='discrminator_y_loss')
+    plt.title(f'Discrminator Loss-{n_steps}')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(save_dir, format='png', bbox_inches='tight')
+
 # Plot and save keras trainning history
 def plot_save_history(hist, save_dir):
     plt.figure(figsize=(15, 7))
