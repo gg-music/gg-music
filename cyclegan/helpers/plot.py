@@ -5,29 +5,21 @@ from .utils import make_dirs
 
 
 def plot_epoch_loss(hist, save_dir, n_steps):
-    plt.figure(figsize=(8, 4), dpi=100)
+    for type_, models in hist.items():
+        for model, npy in models.items():
+            plt.figure(figsize=(8, 4), dpi=100)
+            plt.plot(npy, label=f'{type_}_{model}_loss')
 
-    plt.subplot(1, 2, 1)
-    plt.plot(hist['gG'], label='generator_G_loss')
-    plt.plot(hist['fG'], label='generator_F_loss')
-    plt.title(f'Generator Loss-{n_steps:04}')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
+        plt.title(f'Generator Loss-{n_steps:04}')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.legend()
 
-    plt.subplot(1, 2, 2)
-    plt.plot(hist['xD'], label='discrminator_X_loss')
-    plt.plot(hist['yD'], label='discrminator_y_loss')
-    plt.title(f'Discrminator Loss-{n_steps:04}')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
+        make_dirs(f'{save_dir}/{type_}')
 
-    make_dirs(save_dir)
-
-    output_path = os.path.join(save_dir, f'{n_steps:04}-loss.png')
-
-    plt.savefig(output_path, format='png', dpi=100)
+        output_path = os.path.join(f'{save_dir}/{type_}',
+                                   f'{n_steps:04}-loss.png')
+        plt.savefig(output_path, format='png', dpi=100)
 
 
 def plot_heat_map(img, title, save_dir=None):

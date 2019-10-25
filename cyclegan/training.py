@@ -89,7 +89,7 @@ for epoch in range(start, EPOCHS):
                       '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
-    loss_history = {'gG': [], 'fG': [], 'xD': [], 'yD': []}
+    loss_history = {'G': {'g': [], 'f': []}, 'D': {'x': [], 'y': []}}
 
     n = 0
     pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)),
@@ -107,10 +107,10 @@ for epoch in range(start, EPOCHS):
         train_step(image_x['data'], image_y['data'], update='d')
         train_step(image_x['data'], image_y['data'], update='d')
 
-        loss_history['gG'].append(gG.numpy())
-        loss_history['fG'].append(fG.numpy())
-        loss_history['xD'].append(xD.numpy())
-        loss_history['yD'].append(yD.numpy())
+        loss_history['Generator']['g'].append(gG.numpy())
+        loss_history['Generator']['f'].append(fG.numpy())
+        loss_history['Discrminator']['x'].append(xD.numpy())
+        loss_history['Discrminator']['y'].append(yD.numpy())
 
         if n % 100 == 0:
             prediction_g = generator_g(test_x['data'])
@@ -126,8 +126,7 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_MODEL_PATH,
                              '{}_to_{}'.format(y_instrument, x_instrument)))
 
-            plot_epoch_loss(loss_history, os.path.join(SAVE_MODEL_PATH, 'loss'),
-                            n)
+            plot_epoch_loss(loss_history, SAVE_MODEL_PATH, n)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
