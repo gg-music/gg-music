@@ -8,8 +8,8 @@ MUSIC_NPY_PATH = {
 }
 
 MUSIC_SRC_PATH = {
-    'from': '/home/gtzan/data/gan/wav/sounds',
-    'to': '/home/gtzan/data/gan_preprocessing/'
+    'wav': '/home/gtzan/data/gan/wav/sounds',
+    'tfrecord': '/home/gtzan/data/gan_preprocessing/'
 }
 
 MODEL_ROOT_PATH = '/home/gtzan/models'
@@ -18,4 +18,10 @@ DEFAULT_SAMPLING_RATE = 22050
 DROPOUT_RATE = 0.5
 BN_AXIS = 3
 PAD_SIZE = ((0, 0), (8, 9))
-STEPS = 500
+STEPS = 400
+
+X_INSTRUMENT = 'piano1'
+Y_INSTRUMENT = 'guitar1'
+
+INPUT_FILE = [['/home/gtzan/data/gan/wav/sounds/guitar1/guitar1-003.wav', 'f'],
+              ['/home/gtzan/data/gan/wav/sounds/piano1/piano1-036.wav', 'g']]

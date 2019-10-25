@@ -5,7 +5,7 @@ import tensorflow as tf
 from .helpers import signal
 from .helpers.utils import preprocessing_fn, make_dirs
 from .model_settings import *
-from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH
+from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH, INPUT_FILE
 
 
 def predict(model, input_filename, output_filename):
@@ -28,6 +28,7 @@ def predict(model, input_filename, output_filename):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True)
+    ap.add_argument('-e', '--epoch', required=False)
     args = ap.parse_args()
 
     MODEL_PATH = os.path.join(MODEL_ROOT_PATH, args.model)
@@ -44,17 +45,25 @@ if __name__ == "__main__":
         discriminator_y_optimizer=discriminator_y_optimizer)
 
     ckpt_manager = tf.train.CheckpointManager(ckpt, MODEL_PATH, max_to_keep=100)
-    ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
-    print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
-    input_file = [['/home/gtzan/data/gan/wav/sounds/cello/cello-600.wav', ckpt.generator_g],
-                  ['/home/gtzan/data/gan/wav/sounds/sax/sax-600.wav', ckpt.generator_f]]
+    if args.epoch:
+        epoch = args.epoch
+        print('Checkpoint epoch {} restored!!'.format(last_epoch))
+    else:
+        epoch = last_epoch
+        print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
+    epoch -= 1
+    ckpt.restore(ckpt_manager.checkpoints[epoch])
 
-    for wav, model in input_file:
+    models = {'g': generator_g,
+              'f': generator_f}
+
+    for wav, model in INPUT_FILE:
+
         output_file = os.path.join(WAV_PATH,
-                                   os.path.basename(ckpt_manager.latest_checkpoint)
+                                   os.path.basename(ckpt_manager.checkpoints[epoch])
                                    + "-" + os.path.basename(wav))
 
-        predict(model, wav, output_file)
+        predict(models[model], wav, output_file)
         print('Prediction saved in', output_file)

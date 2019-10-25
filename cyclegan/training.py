@@ -9,7 +9,7 @@ from .helpers.utils import get_file_list, make_dirs
 from .helpers.example_protocol import extract_example
 from .helpers.plot import plot_heat_map, plot_epoch_loss
 from .model_settings import *
-from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH, STEPS
+from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH, STEPS, X_INSTRUMENT, Y_INSTRUMENT
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-m',
@@ -23,8 +23,8 @@ SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 
 make_dirs(SAVE_MODEL_PATH)
 
-x_instrument = 'cello'
-y_instrument = 'sax'
+x_instrument, y_instrument = X_INSTRUMENT, Y_INSTRUMENT
+
 
 x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
 y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
@@ -120,7 +120,7 @@ for epoch in range(start, EPOCHS):
         loss_history['Discriminator']['x'].append(xD.numpy())
         loss_history['Discriminator']['y'].append(yD.numpy())
 
-        if n % 100 == 0:
+        if n % 10 == 0:
             prediction_g = generator_g(test_x['data'])
             plot_heat_map(
                 prediction_g,
