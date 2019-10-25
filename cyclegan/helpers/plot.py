@@ -26,7 +26,7 @@ def plot_epoch_loss(hist, save_dir, n_steps):
     plt.legend()
 
     make_dirs(save_dir)
-    output_path = os.path.join(save_dir, n_steps + '-loss.png')
+    output_path = os.path.join(save_dir, str(n_steps) + '-loss.png')
 
     plt.tight_layout()
     plt.savefig(output_path, format='png', bbox_inches='tight')
