@@ -30,11 +30,8 @@ if __name__ == "__main__":
     ap.add_argument('-m', '--model', required=True)
     args = ap.parse_args()
 
-    x_instrument = 'cello'
-    y_instrument = 'sax'
-
-    model = os.path.join(MODEL_ROOT_PATH, args.model)
-
+    MODEL_PATH = os.path.join(MODEL_ROOT_PATH, args.model)
+    WAV_PATH = os.path.join(MODEL_PATH, 'wav')
 
     ckpt = tf.train.Checkpoint(
         generator_g=generator_g,
@@ -46,23 +43,18 @@ if __name__ == "__main__":
         discriminator_x_optimizer=discriminator_x_optimizer,
         discriminator_y_optimizer=discriminator_y_optimizer)
 
-    ckpt_manager = tf.train.CheckpointManager(ckpt, model, max_to_keep=100)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, MODEL_PATH, max_to_keep=100)
     ckpt.restore(ckpt_manager.latest_checkpoint)
     last_epoch = len(ckpt_manager.checkpoints)
     print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
-    input_file = '/home/gtzan/data/gan/wav/sounds/sax/sax-166.wav'
-    output_file = model + '/{}_to_{}/'.format(x_instrument, y_instrument) \
-                  + os.path.basename(ckpt_manager.latest_checkpoint) + "-" \
-                  + os.path.basename(input_file)
+    input_file = [['/home/gtzan/data/gan/wav/sounds/cello/cello-600.wav', ckpt.generator_g],
+                  ['/home/gtzan/data/gan/wav/sounds/sax/sax-600.wav', ckpt.generator_f]]
 
-    predict(ckpt.generator_g, input_file, output_file)
-    print('Prediction saved in', output_file)
+    for wav, model in input_file:
+        output_file = os.path.join(WAV_PATH,
+                                   os.path.basename(ckpt_manager.latest_checkpoint)
+                                   + "-" + os.path.basename(wav))
 
-    input_file = '/home/gtzan/data/gan/wav/sounds/cello/cello-463.wav'
-    output_file = model + '/{}_to_{}/'.format(y_instrument, x_instrument) \
-                  + os.path.basename(ckpt_manager.latest_checkpoint) + "-" \
-                  + os.path.basename(input_file)
-
-    predict(ckpt.generator_f, input_file, output_file)
-    print('Prediction saved in', output_file)
+        predict(model, wav, output_file)
+        print('Prediction saved in', output_file)
