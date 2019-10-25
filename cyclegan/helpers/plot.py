@@ -5,19 +5,19 @@ from .utils import make_dirs
 
 
 def plot_epoch_loss(hist, save_dir, n_steps):
-    for type_, models in hist.items():
+    for model_type, models in hist.items():
+        plt.figure(figsize=(4, 4), dpi=100)
         for model, npy in models.items():
-            plt.figure(figsize=(8, 4), dpi=100)
-            plt.plot(npy, label=f'{type_}_{model}_loss')
+            plt.plot(npy, label=f'{model_type}_{model}_loss')
 
-        plt.title(f'Generator Loss-{n_steps:04}')
-        plt.xlabel('Epochs')
+        plt.title(f'{model_type} Loss-{n_steps:04}')
+        plt.xlabel('Steps')
         plt.ylabel('Loss')
         plt.legend()
 
-        make_dirs(f'{save_dir}/{type_}')
+        make_dirs(f'{save_dir}/{model_type}_loss')
 
-        output_path = os.path.join(f'{save_dir}/{type_}',
+        output_path = os.path.join(f'{save_dir}/{model_type}_loss',
                                    f'{n_steps:04}-loss.png')
         plt.savefig(output_path, format='png', dpi=100)
 

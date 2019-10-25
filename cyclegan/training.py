@@ -89,7 +89,7 @@ for epoch in range(start, EPOCHS):
                       '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
-    loss_history = {'G': {'g': [], 'f': []}, 'D': {'x': [], 'y': []}}
+    loss_history = {'Generator': {'g': [], 'f': []}, 'Discriminator': {'x': [], 'y': []}}
 
     n = 0
     pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)),
@@ -109,8 +109,8 @@ for epoch in range(start, EPOCHS):
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
-        loss_history['Discrminator']['x'].append(xD.numpy())
-        loss_history['Discrminator']['y'].append(yD.numpy())
+        loss_history['Discriminator']['x'].append(xD.numpy())
+        loss_history['Discriminator']['y'].append(yD.numpy())
 
         if n % 100 == 0:
             prediction_g = generator_g(test_x['data'])
