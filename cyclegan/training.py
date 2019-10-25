@@ -89,7 +89,7 @@ for epoch in range(start, EPOCHS):
                       '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
-    loss_history = {'Generator': {'g': [], 'f': []}, 'Discriminator': {'x': [], 'y': []}}
+    loss_history = {'Generator': {'f': [], 'g': []}, 'Discriminator': {'x': [], 'y': []}}
 
     n = 0
     pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)),
