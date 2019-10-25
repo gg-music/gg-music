@@ -5,7 +5,7 @@ import tensorflow as tf
 from .helpers import signal
 from .helpers.utils import preprocessing_fn, make_dirs
 from .model_settings import *
-from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH
+from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH, INPUT_FILE
 
 
 def predict(model, input_filename, output_filename):
@@ -56,14 +56,14 @@ if __name__ == "__main__":
     epoch -= 1
     ckpt.restore(ckpt_manager.checkpoints[epoch])
 
+    models = {'g': generator_g,
+              'f': generator_f}
 
-    input_file = [['/home/gtzan/data/gan/wav/sounds/piano1/piano1-099.wav', ckpt.generator_g],
-                  ['/home/gtzan/data/gan/wav/sounds/guitar1/guitar1-199.wav', ckpt.generator_f]]
+    for wav, model in INPUT_FILE:
 
-    for wav, model in input_file:
         output_file = os.path.join(WAV_PATH,
                                    os.path.basename(ckpt_manager.checkpoints[epoch])
                                    + "-" + os.path.basename(wav))
 
-        predict(model, wav, output_file)
+        predict(models[model], wav, output_file)
         print('Prediction saved in', output_file)
