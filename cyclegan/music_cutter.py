@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-s',
                     '--seconds',
                     help='n seconds per part',
-                    type=int,
+                    type=float,
                     required=True)
 parser.add_argument('-f',
                     '--file',
