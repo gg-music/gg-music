@@ -38,7 +38,6 @@ if __name__ == '__main__':
                   output_dir=os.path.join(MUSIC_ROOT_PATH,
                                           'gan_preprocessing/tfrecords'),
                   spec_format=to_stft,
-                  to_tfrecord=args.tfrecord,
-                  trim=5.9)
+                  to_tfrecord=args.tfrecord)
 
     processing(file_list, par, args.batch_size)
