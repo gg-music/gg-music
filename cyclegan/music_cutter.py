@@ -25,7 +25,7 @@ except Exception as e:
 spilit_time = args.seconds * 1000
 prefix = args.file.split('/')[-1][0:-4]
 
-output_dir = f'/home/gtzan/data/gan_preprocessing/{prefix}'
+output_dir = f'/home/gtzan/data/gan_preprocessing/wav/{prefix}'
 
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir, mode=0o777)
