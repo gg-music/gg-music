@@ -24,10 +24,9 @@ def plot_epoch_loss(hist, save_dir, n_steps, n_epoch):
         plt.close()
 
 
-def plot_heat_map(img, title, save_dir=None):
+def plot_heat_map(img, title, save_dir):
     img = img[0, :, :, 0]
     img = (img + 1) / 2
-
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
     ax = sns.heatmap(img, vmin=0, vmax=1, ax=ax, cbar=False)
     ax.set_title(title)
