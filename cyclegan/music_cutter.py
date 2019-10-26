@@ -38,7 +38,7 @@ for i in range(0, 100000000000):
     if (len(new_audio) < spilit_time):
         break
 
-    file_name = '{}{}{:03d}{}'.format(prefix, '-', i, '.wav')
+    file_name = '{}{}{:04d}{}'.format(prefix, '-', i, '.wav')
     print(file_name)
     new_audio.export(output_dir + '/' + file_name, format="wav")
 
