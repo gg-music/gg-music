@@ -23,24 +23,35 @@ def plot_epoch_loss(hist, save_dir, n_steps, n_epoch):
         plt.close()
 
 
-def plot_heat_map(img, title, save_dir=None):
+def plot_heat_map(img, title, save_dir):
     img = img[0, :, :, 0]
     img = (img + 1) / 2
+    fig = plt.axes()
 
-    fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
-    ax = sns.heatmap(img,
-                     vmin=0,
-                     vmax=1,
-                     ax=ax,
-                     cbar_kws={'orientation': 'horizontal'})
-    ax.set_title(title)
-    ax.invert_yaxis()
+    # data = np.random.randn(20).cumsum()
+    # plt.plot(img)
+    # plt.title('Plot of a %i-element brownian noise sequence' % 1)
+    # output = os.path.join(save_dir, title + '.png')
+    # fig.savefig(output, format='png', dpi=100)
 
-    make_dirs(save_dir)
 
-    if save_dir:
-        output = os.path.join(save_dir, title + '.png')
-        plt.savefig(output, format='png', dpi=100)
-        plt.close()
-    else:
-        plt.show()
+def plot_heat_map_old(img, title, save_dir):
+    img = img[0, :, :, 0]
+    img = (img + 1) / 2
+    # fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+    # ax = sns.heatmap(img,
+    #                  vmin=0,
+    #                  vmax=1,
+    #                  ax=ax,
+    #                  cbar_kws={'orientation': 'horizontal'})
+    # ax.set_title(title)
+    # ax.invert_yaxis()
+
+    # make_dirs(save_dir)
+
+    # if save_dir:
+    #     output = os.path.join(save_dir, title + '.png')
+    #     plt.savefig(output, format='png', dpi=100)
+    #     plt.close()
+    # else:
+    #     plt.show()
