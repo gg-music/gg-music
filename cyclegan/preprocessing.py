@@ -3,7 +3,7 @@ import argparse
 from functools import partial
 from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from .settings import MUSIC_SRC_PATH, MUSIC_ROOT_PATH
+from .settings import MUSIC_ROOT_PATH
 from .helpers.utils import get_file_list
 from .helpers.signal import to_stft
 from .helpers.plot import plot_heat_map, plot_epoch_loss
@@ -35,9 +35,9 @@ if __name__ == '__main__':
     file_list = get_file_list(args.src_path)
 
     par = partial(batch_processing,
-                  output_dir=MUSIC_ROOT_PATH,
+                  output_dir=os.path.join(MUSIC_ROOT_PATH,
+                                          'gan_preprocessing/tfrecords'),
                   spec_format=to_stft,
-                  to_tfrecord=args.tfrecord,
-                  trim=5.9)
+                  to_tfrecord=args.tfrecord)
 
     processing(file_list, par, args.batch_size)
