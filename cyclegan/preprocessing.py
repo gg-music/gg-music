@@ -3,7 +3,7 @@ import argparse
 from functools import partial
 from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from .settings import MUSIC_SRC_PATH, MUSIC_ROOT_PATH
+from .settings import MUSIC_ROOT_PATH
 from .helpers.utils import get_file_list
 from .helpers.signal import to_stft
 from .helpers.plot import plot_heat_map, plot_epoch_loss
