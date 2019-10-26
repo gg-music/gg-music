@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from .helpers.utils import get_file_list, make_dirs
 from .helpers.example_protocol import extract_example
-from .helpers.plot import plot_heat_map, plot_epoch_loss
+from .helpers.logger import save_loss_log, save_heatmap_npy
 from .model_settings import *
 from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH, STEPS, X_INSTRUMENT, Y_INSTRUMENT
 
@@ -24,7 +24,6 @@ SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 make_dirs(SAVE_MODEL_PATH)
 
 x_instrument, y_instrument = X_INSTRUMENT, Y_INSTRUMENT
-
 
 x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
 y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
@@ -43,18 +42,14 @@ for example_x, example_y in tf.data.Dataset.zip(
     example_y = tf.train.Example.FromString(example_y.numpy())
     test_x = extract_example(example_x)
     test_y = extract_example(example_y)
-
-    plot_heat_map(test_x['data'],
-                  title='{}_reference'.format(x_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(x_instrument, y_instrument)))
-
-    plot_heat_map(test_y['data'],
-                  title='{}_reference'.format(y_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(y_instrument, x_instrument)))
+    save_heatmap_npy(
+        test_x['data'], '{}_reference'.format(x_instrument),
+        os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(x_instrument,
+                                                        y_instrument)))
+    save_heatmap_npy(
+        test_y['data'], '{}_reference'.format(y_instrument),
+        os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(y_instrument,
+                                                        x_instrument)))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -86,19 +81,8 @@ loss_history = {
     }
 }
 for epoch in range(start, EPOCHS):
-    plot_heat_map(test_x['data'],
-                  title='{}_reference'.format(x_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(x_instrument, y_instrument)))
 
-    plot_heat_map(test_y['data'],
-                  title='{}_reference'.format(y_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
-
     n = 0
     pbar = tqdm(tf.data.Dataset.zip((x_train_dataset, y_train_dataset)),
                 total=STEPS)
@@ -120,21 +104,21 @@ for epoch in range(start, EPOCHS):
         loss_history['Discriminator']['x'].append(xD.numpy())
         loss_history['Discriminator']['y'].append(yD.numpy())
 
-        if n % 10 == 0:
+        if n % 10 == 0 and n != 0:
             prediction_g = generator_g(test_x['data'])
-            plot_heat_map(
+            save_heatmap_npy(
                 prediction_g,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_MODEL_PATH,
                              '{}_to_{}'.format(x_instrument, y_instrument)))
+
             prediction_f = generator_f(test_y['data'])
-            plot_heat_map(
+            save_heatmap_npy(
                 prediction_f,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
                 os.path.join(SAVE_MODEL_PATH,
                              '{}_to_{}'.format(y_instrument, x_instrument)))
-
-            plot_epoch_loss(loss_history, SAVE_MODEL_PATH, n, epoch + 1)
+            save_loss_log(loss_history, SAVE_MODEL_PATH, n, epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
