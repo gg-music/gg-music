@@ -1,5 +1,7 @@
 import librosa
 import numpy as np
+
+from cyclegan.settings import PAD_SIZE, DEFAULT_SAMPLING_RATE
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -105,3 +107,34 @@ def crop(image, crop_size):
     rpad = crop_size[1][1]
     image = image[:, upad:image.shape[1] - dpad, lpad:image.shape[2] - rpad, :]
     return image
+
+
+def preprocessing_fn(file_path,
+                     spec_format,
+                     trim=None,
+                     split=None,
+                     convert_db=True,
+                     pad_size=PAD_SIZE):
+    signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
+
+    if trim:
+        trim_length = sr * trim
+        signal = signal[:trim_length]
+
+    if split:
+        signal = splitsongs(signal, window=split)
+
+    mag, phase = spec_format(signal)
+
+    if np.max(mag) == 0:
+        raise ValueError
+
+    if convert_db:
+        mag = amplitude_to_db(mag)
+        mag = (mag * 2) - 1
+
+    if pad_size:
+        mag = np.pad(mag, pad_size)
+        mag = np.repeat(mag[:, :, np.newaxis], 3, axis=2)
+
+    return mag, phase

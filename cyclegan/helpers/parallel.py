@@ -1,12 +1,11 @@
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 import audioread
-import librosa
 import numpy as np
 import os
-from .signal import splitsongs, amplitude_to_db
+
+from cyclegan.helpers.signal import preprocessing_fn
 from .utils import make_dirs
-from ..settings import PAD_SIZE, DEFAULT_SAMPLING_RATE
-from .plot import plot_epoch_loss, plot_heat_map
+from .plot import plot_heat_map
 
 
 def batch(iterable, n=1):
@@ -122,32 +121,3 @@ def output2tfrecord(category_dir, file_name, batch_specs):
     print(f'{save_file}')
 
 
-def preprocessing_fn(file_path,
-                     spec_format,
-                     trim=None,
-                     split=None,
-                     convert_db=True,
-                     pad_size=PAD_SIZE):
-    signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
-
-    if trim:
-        trim_length = sr * trim
-        signal = signal[:trim_length]
-
-    if split:
-        signal = splitsongs(signal, window=split)
-
-    mag, phase = spec_format(signal)
-
-    if np.max(mag) == 0:
-        raise ValueError
-
-    if convert_db:
-        mag = amplitude_to_db(mag)
-        mag = (mag * 2) - 1
-
-    if pad_size:
-        mag = np.pad(mag, pad_size)
-        mag = np.repeat(mag[:, :, np.newaxis], 3, axis=2)
-
-    return mag, phase

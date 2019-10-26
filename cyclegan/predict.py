@@ -3,7 +3,8 @@ import argparse
 import numpy as np
 import tensorflow as tf
 from .helpers import signal
-from .helpers.utils import preprocessing_fn, make_dirs
+from .helpers.utils import make_dirs
+from cyclegan.helpers.signal import preprocessing_fn
 from .model_settings import *
 from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH, INPUT_FILE
 
