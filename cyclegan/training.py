@@ -20,8 +20,9 @@ ap.add_argument('-m',
 args = ap.parse_args()
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
-
+SAVE_LOG_PATH = os.path.join(SAVE_MODEL_PATH, 'logs')
 make_dirs(SAVE_MODEL_PATH)
+make_dirs(SAVE_LOG_PATH)
 
 x_instrument, y_instrument = X_INSTRUMENT, Y_INSTRUMENT
 
@@ -44,12 +45,12 @@ for example_x, example_y in tf.data.Dataset.zip(
     test_y = extract_example(example_y)
     save_heatmap_npy(
         test_x['data'], '{}_reference'.format(x_instrument),
-        os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(x_instrument,
-                                                        y_instrument)))
+        os.path.join(SAVE_LOG_PATH, '{}_to_{}'.format(x_instrument,
+                                                      y_instrument)))
     save_heatmap_npy(
         test_y['data'], '{}_reference'.format(y_instrument),
-        os.path.join(SAVE_MODEL_PATH, '{}_to_{}'.format(y_instrument,
-                                                        x_instrument)))
+        os.path.join(SAVE_LOG_PATH, '{}_to_{}'.format(y_instrument,
+                                                      x_instrument)))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -109,16 +110,16 @@ for epoch in range(start, EPOCHS):
             save_heatmap_npy(
                 prediction_g,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH,
+                os.path.join(SAVE_LOG_PATH,
                              '{}_to_{}'.format(x_instrument, y_instrument)))
 
             prediction_f = generator_f(test_y['data'])
             save_heatmap_npy(
                 prediction_f,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH,
+                os.path.join(SAVE_LOG_PATH,
                              '{}_to_{}'.format(y_instrument, x_instrument)))
-            save_loss_log(loss_history, SAVE_MODEL_PATH, n, epoch + 1)
+            save_loss_log(loss_history, SAVE_LOG_PATH, n, epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()

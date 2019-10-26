@@ -14,7 +14,7 @@ def save_loss_log(hist, save_dir, n_steps, n_epoch, delimiter=','):
 
         make_dirs(folder)
 
-        filename = f'epoch{n_epoch:02}_{n_steps:04}-loss.log'
+        filename = f'{model}_epoch{n_epoch:02}_{n_steps:04}-loss.log'
 
         with open(os.path.join(folder, filename), 'w') as fp:
             for n in npy:

@@ -1,11 +1,12 @@
 import os
 import argparse
 from functools import partial
-from .helpers.parallel import batch_preprocessing, preprocessing
+from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from .settings import MUSIC_SRC_PATH, MUSIC_ROOT_PATH
 from .helpers.utils import get_file_list
 from .helpers.signal import to_stft
+from .helpers.plot import plot_heat_map, plot_epoch_loss
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
@@ -33,9 +34,9 @@ if __name__ == '__main__':
 
     file_list = get_file_list(args.src_path)
 
-    par = partial(batch_preprocessing,
+    par = partial(batch_processing,
                   output_dir=MUSIC_ROOT_PATH,
                   spec_format=to_stft,
                   to_tfrecord=args.tfrecord)
 
-    preprocessing(file_list, par, args.batch_size)
+    processing(file_list, par, args.batch_size)

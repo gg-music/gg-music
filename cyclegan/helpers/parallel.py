@@ -6,6 +6,7 @@ import os
 from .signal import splitsongs, amplitude_to_db
 from .utils import make_dirs
 from ..settings import PAD_SIZE, DEFAULT_SAMPLING_RATE
+from .plot import plot_epoch_loss, plot_heat_map
 
 
 def batch(iterable, n=1):
@@ -14,22 +15,66 @@ def batch(iterable, n=1):
         yield iterable[ndx:min(ndx + n, iter_len)]
 
 
-def preprocessing(song_list, par, batch_size=10):
+def processing(file_list, par, batch_size=10):
 
-    pool = Pool(processes=cpu_count(), maxtasksperchild=1)
+    pool = Pool(processes=2, maxtasksperchild=1)
 
-    for _ in pool.imap_unordered(par, batch(song_list, batch_size)):
+    for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
         pass
 
     pool.close()
     pool.join()
 
 
-def batch_preprocessing(batch_file_path,
-                        output_dir,
-                        spec_format,
-                        to_tfrecord=False,
-                        **kwargs):
+def batch_plot(batch_file_path, output_dir, **kwargs):
+    for file_path in batch_file_path:
+        title = file_path.split('/')[-1].split('.')[0]
+        save_dir = os.path.join(output_dir,
+                                os.path.join(file_path.split('/')[-2]))
+        if 'npy' in file_path:
+            # print(np.load(file_path))
+            plot_heat_map(np.load(file_path), title, save_dir)
+        else:
+            pass
+        # if '.log' in file_path:
+        #     pass
+        # else:
+        #     """
+        #         npy
+        #     """
+        #     plot_heat_map()
+        # pass
+        # batch_specs = []
+        # try:
+        #     specs, _ = preprocessing_fn(file_path, spec_format, **kwargs)
+        # except ValueError:
+        #     os.remove(file_path)
+        #     print("\nremove zero file: " + file_path + "\n")
+        #     continue
+        # except audioread.exceptions.NoBackendError as err:
+        #     print("\n", err, file_path, "\n")
+        #     continue
+
+        # batch_specs.append(specs)
+        # batch_specs = np.array(batch_specs)
+
+        # file_name = os.path.basename(file_path).split('.')[-2]
+        # category = os.path.dirname(file_path).split('/')[-1]
+        # category_dir = os.path.join(output_dir, category)
+
+        # make_dirs(category_dir)
+
+        # if to_tfrecord:
+        #     output2tfrecord(category_dir, file_name, batch_specs)
+        # else:
+        #     output2raw(category_dir, file_name, batch_specs)
+
+
+def batch_processing(batch_file_path,
+                     output_dir,
+                     spec_format,
+                     to_tfrecord=False,
+                     **kwargs):
     for file_path in batch_file_path:
         batch_specs = []
         try:
