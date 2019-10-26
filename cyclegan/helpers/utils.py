@@ -13,3 +13,8 @@ def get_file_list(src_dir):
 def make_dirs(path):
     if not os.path.isdir(path):
         os.makedirs(path, mode=0o777)
+
+
+def check_rawdata_exists(path_x, path_y):
+    if any((not os.path.isdir(path_x), not os.path.isdir(path_y))):
+        raise FileNotFoundError('any of input instrument not exists')

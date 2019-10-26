@@ -1,12 +1,4 @@
-MUSIC_NPY_PATH = {
-    'guitar1': '/home/gtzan/data/gan_preprocessing/guitar1',
-    'guitar2': '/home/gtzan/data/gan_preprocessing/guitar2',
-    'piano1': '/home/gtzan/data/gan_preprocessing/piano1',
-    'piano2': '/home/gtzan/data/gan_preprocessing/piano2',
-    'cello': '/home/gtzan/data/gan_preprocessing/cello',
-    'sax': '/home/gtzan/data/gan_preprocessing/sax'
-}
-
+RAWSET_PATH = '/home/gtzan/data/gan_preprocessing/tfrecords'
 MUSIC_SRC_PATH = {
     'wav': '/home/gtzan/data/gan/wav/sounds',
     'tfrecord': '/home/gtzan/data/gan_preprocessing/'
@@ -20,9 +12,6 @@ DROPOUT_RATE = 0.5
 BN_AXIS = 3
 PAD_SIZE = ((0, 0), (1, 0))
 STEPS = 400
-
-X_INSTRUMENT = 'piano1'
-Y_INSTRUMENT = 'guitar1'
 
 INPUT_FILE = [['/home/gtzan/data/gan/wav/sounds/guitar1/guitar1-377.wav', 'f'],
               ['/home/gtzan/data/gan/wav/sounds/piano1/piano1-377.wav', 'g']]

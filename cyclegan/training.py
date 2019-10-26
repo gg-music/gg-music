@@ -6,11 +6,11 @@ import argparse
 import tensorflow as tf
 from tqdm import tqdm
 
-from .helpers.utils import get_file_list, make_dirs
+from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
 from .model_settings import *
-from .settings import MUSIC_NPY_PATH, EPOCHS, MODEL_ROOT_PATH, STEPS, X_INSTRUMENT, Y_INSTRUMENT
+from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-m',
@@ -18,17 +18,25 @@ ap.add_argument('-m',
                 required=True,
                 help='your model name',
                 type=str)
+ap.add_argument('-x', required=True, help='convert from', type=str)
+ap.add_argument('-y', required=True, help='convert to', type=str)
 args = ap.parse_args()
 
+x_rawset_path = os.path.join(RAWSET_PATH, args.x)
+y_rawset_path = os.path.join(RAWSET_PATH, args.y)
+check_rawdata_exists(x_rawset_path, y_rawset_path)
+
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
+SAVE_NPY_PATH = os.path.join(SAVE_MODEL_PATH, 'npy')
 SAVE_LOG_PATH = os.path.join(SAVE_MODEL_PATH, 'logs')
+
 make_dirs(SAVE_MODEL_PATH)
 make_dirs(SAVE_LOG_PATH)
 
-x_instrument, y_instrument = X_INSTRUMENT, Y_INSTRUMENT
+x_instrument, y_instrument = args.x, args.y
 
-x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
-y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
+x_list = get_file_list(x_rawset_path)
+y_list = get_file_list(y_rawset_path)
 
 x_train_dataset = tf.data.TFRecordDataset(
     x_list[:STEPS]).prefetch(buffer_size=100)
@@ -46,10 +54,10 @@ for example_x, example_y in tf.data.Dataset.zip(
     test_y = extract_example(example_y)
     save_heatmap_npy(test_x['data'],
                      '{}_reference'.format(x_instrument),
-                     save_dir=os.path.join(SAVE_MODEL_PATH, 'Generator_g'))
+                     save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_g'))
     save_heatmap_npy(test_y['data'],
                      '{}_reference'.format(y_instrument),
-                     save_dir=os.path.join(SAVE_MODEL_PATH, 'Generator_f'))
+                     save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_f'))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -106,24 +114,24 @@ for epoch in range(start, EPOCHS):
             save_heatmap_npy(
                 prediction_g,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH, 'Generator_g'))
+                os.path.join(SAVE_NPY_PATH, 'Generator_g'))
             prediction_f = generator_f(test_y['data'])
             save_heatmap_npy(
                 prediction_f,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH, 'Generator_f'))
+                os.path.join(SAVE_NPY_PATH, 'Generator_f'))
 
             prediction_y = discriminator_y(prediction_g)
             save_heatmap_npy(
                 prediction_y,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH, 'Discriminator_y'))
+                os.path.join(SAVE_NPY_PATH, 'Discriminator_y'))
 
             prediction_x = discriminator_x(prediction_f)
             save_heatmap_npy(
                 prediction_x,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH, 'Discriminator_x'))
+                os.path.join(SAVE_NPY_PATH, 'Discriminator_x'))
 
             save_loss_log(loss_history, SAVE_LOG_PATH, n, epoch + 1)
 

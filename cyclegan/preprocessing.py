@@ -30,7 +30,7 @@ if __name__ == '__main__':
     args = ap.parse_args()
 
     if not os.path.isdir(args.src_path):
-        raise NotADirectoryError('Invalid src path')
+        raise FileNotFoundError('Invalid src path')
 
     file_list = get_file_list(args.src_path)
 
