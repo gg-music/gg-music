@@ -35,7 +35,8 @@ if __name__ == '__main__':
     file_list = get_file_list(args.src_path)
 
     par = partial(batch_processing,
-                  output_dir=MUSIC_ROOT_PATH,
+                  output_dir=os.path.join(MUSIC_ROOT_PATH,
+                                          'gan_preprocessing/tfrecords'),
                   spec_format=to_stft,
                   to_tfrecord=args.tfrecord,
                   trim=5.9)
