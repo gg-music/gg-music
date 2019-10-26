@@ -8,4 +8,5 @@ file_list = get_file_list(MUSIC_SRC_PATH['wav'])
 parallel_preprocessing(file_list,
                        MUSIC_SRC_PATH['tfrecord'],
                        spec_format=to_stft,
-                       batch_size=10)
+                       batch_size=10,
+                       trim=5.9)

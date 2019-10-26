@@ -1,5 +1,6 @@
 import time
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import tensorflow as tf
@@ -25,7 +26,6 @@ make_dirs(SAVE_MODEL_PATH)
 
 x_instrument, y_instrument = X_INSTRUMENT, Y_INSTRUMENT
 
-
 x_list = get_file_list(MUSIC_NPY_PATH[x_instrument])
 y_list = get_file_list(MUSIC_NPY_PATH[y_instrument])
 
@@ -46,15 +46,11 @@ for example_x, example_y in tf.data.Dataset.zip(
 
     plot_heat_map(test_x['data'],
                   title='{}_reference'.format(x_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(x_instrument, y_instrument)))
+                  save_dir=os.path.join(SAVE_MODEL_PATH, 'Generator_g'))
 
     plot_heat_map(test_y['data'],
                   title='{}_reference'.format(y_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(y_instrument, x_instrument)))
+                  save_dir=os.path.join(SAVE_MODEL_PATH, 'Generator_f'))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -86,17 +82,6 @@ loss_history = {
     }
 }
 for epoch in range(start, EPOCHS):
-    plot_heat_map(test_x['data'],
-                  title='{}_reference'.format(x_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(x_instrument, y_instrument)))
-
-    plot_heat_map(test_y['data'],
-                  title='{}_reference'.format(y_instrument),
-                  save_dir=os.path.join(
-                      SAVE_MODEL_PATH,
-                      '{}_to_{}'.format(y_instrument, x_instrument)))
     start = time.time()
 
     n = 0
@@ -111,9 +96,6 @@ for epoch in range(start, EPOCHS):
         gG, fG, xD, yD = train_step(image_x['data'],
                                     image_y['data'],
                                     update='gfd')
-        train_step(image_x['data'], image_y['data'], update='d')
-        train_step(image_x['data'], image_y['data'], update='d')
-        train_step(image_x['data'], image_y['data'], update='d')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
@@ -124,15 +106,23 @@ for epoch in range(start, EPOCHS):
             prediction_g = generator_g(test_x['data'])
             plot_heat_map(
                 prediction_g,
-                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH,
-                             '{}_to_{}'.format(x_instrument, y_instrument)))
+                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument,epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH, 'Generator_g'))
             prediction_f = generator_f(test_y['data'])
             plot_heat_map(
                 prediction_f,
-                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_MODEL_PATH,
-                             '{}_to_{}'.format(y_instrument, x_instrument)))
+                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument,epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH, 'Generator_f'))
+            prediction_y = discriminator_y(prediction_g)
+            plot_heat_map(
+                prediction_y,
+                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument,epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH, 'Discriminator_y'))
+            prediction_x = discriminator_x(prediction_f)
+            plot_heat_map(
+                prediction_x,
+                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument,epoch + 1, n),
+                os.path.join(SAVE_MODEL_PATH, 'Discriminator_x'))
 
             plot_epoch_loss(loss_history, SAVE_MODEL_PATH, n, epoch + 1)
 

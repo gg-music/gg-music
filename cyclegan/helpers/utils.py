@@ -32,7 +32,7 @@ def batch(iterable, n=1):
         yield iterable[ndx:min(ndx + n, iter_len)]
 
 
-def parallel_preprocessing(song_list,
+def parallel_preprocessing(file_list,
                            output_dir,
                            spec_format=None,
                            batch_size=10,
@@ -45,7 +45,7 @@ def parallel_preprocessing(song_list,
 
     pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
-    for _ in pool.imap_unordered(par, batch(song_list, batch_size)):
+    for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
         pass
 
     pool.close()
@@ -96,7 +96,7 @@ def preprocessing_fn(file_path,
                      pad_size=PAD_SIZE):
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
     if trim:
-        trim_length = sr * trim
+        trim_length = int(sr * trim)
         signal = signal[:trim_length]
 
     if split:

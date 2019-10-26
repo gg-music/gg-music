@@ -1,37 +1,45 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import MaxPooling2D
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Input, LeakyReLU, ZeroPadding2D
+from tensorflow.keras.layers import BatchNormalization, concatenate, Conv2D
 from tensorflow.keras.applications.vgg16 import VGG16
+from .pix2pix import InstanceNormalization
 
 
-def vgg16_model(input_shape, num_genres, freezed_layers=5):
-    input_tensor = Input(shape=input_shape)
+def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=True):
+    initializer = tf.random_normal_initializer(0., 0.02)
+    inp = Input(shape=input_shape, name='input_image')
+    x = inp
+
+    if target:
+        tar = Input(shape=input_shape, name='target_image')
+        x = concatenate([inp, tar], axis=1)  # (bs, 256, 256, channels*2)
+
     vgg16 = VGG16(include_top=False, weights='imagenet',
-                  input_tensor=input_tensor)
+                  input_tensor=x)
 
-    top = Sequential()
-    top.add(Flatten(input_shape=vgg16.output_shape[1:]))
-    top.add(Dense(256, activation='relu'))
-    top.add(Dropout(0.5))
-    top.add(Dense(num_genres, activation='softmax'))
+    zero_pad1 = tf.keras.layers.ZeroPadding2D()(vgg16.output)
+    conv = Conv2D(512, 1, strides=1, kernel_initializer=initializer,
+                  use_bias=False)(zero_pad1)  # (bs, 31, 31, 512)
 
-    model = Model(inputs=vgg16.input, outputs=top(vgg16.output))
-    for layer in model.layers[:freezed_layers]:
-        layer.trainable = False
+    if norm_type.lower() == 'batchnorm':
+        norm1 = BatchNormalization()(conv)
+    elif norm_type.lower() == 'instancenorm':
+        norm1 = InstanceNormalization()(conv)
 
-    return model
+    leaky_relu = LeakyReLU()(norm1)
 
+    zero_pad2 = ZeroPadding2D()(leaky_relu)  # (bs, 33, 33, 512)
 
+    last = tf.keras.layers.Conv2D(
+        1, 4, strides=1,
+        kernel_initializer=initializer)(zero_pad2)  # (bs, 30, 30, 1)
+
+    if target:
+        return tf.keras.Model(inputs=[inp, tar], outputs=last)
+    else:
+        return tf.keras.Model(inputs=inp, outputs=last)
 
 
 if __name__ == '__main__':
-    model = vgg16_model(input_shape=(128, 129, 3), num_genres=10)
+    model = vgg16_model(input_shape=(256, 256, 3))
     model.summary()
-

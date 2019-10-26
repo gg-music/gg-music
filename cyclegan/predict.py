@@ -10,7 +10,8 @@ from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH, INPUT_FI
 
 def predict(model, input_filename, output_filename):
     mag, phase = preprocessing_fn(input_filename,
-                                  spec_format=signal.to_stft)
+                                  spec_format=signal.to_stft,
+                                  trim=5.9)
     mag = mag[np.newaxis, :]
 
     prediction = model.predict(mag)
