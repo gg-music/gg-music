@@ -17,3 +17,9 @@
 
 ## cyclegan
 使用 cyclegan 進行音色轉換, generator 用 unet 架構, discrminator 用 patchGAN 的 model
+
+# command
+* training
+```sh
+python -m cyclegan.training -m {model_name} -x {instrument_from} -y {instrument_to}
+```

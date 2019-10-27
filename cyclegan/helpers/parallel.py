@@ -16,7 +16,7 @@ def batch(iterable, n=1):
 
 def processing(file_list, par, batch_size=10):
 
-    pool = Pool(processes=2, maxtasksperchild=1)
+    pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
         pass
