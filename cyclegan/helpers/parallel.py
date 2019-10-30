@@ -2,7 +2,6 @@ from multiprocessing import Pool, cpu_count
 import audioread
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 
 from .signal import preprocessing_fn
 from .utils import make_dirs

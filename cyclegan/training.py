@@ -28,8 +28,12 @@ check_rawdata_exists(x_rawset_path, y_rawset_path)
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
 SAVE_DB_PATH = os.path.join(SAVE_MODEL_PATH, 'db')
+SAVE_G_LOSS_PATH = os.path.join(SAVE_DB_PATH, 'Generator_loss')
+SAVE_D_LOSS_PATH = os.path.join(SAVE_DB_PATH, 'Discriminator_loss')
 
 make_dirs(SAVE_DB_PATH)
+make_dirs(SAVE_G_LOSS_PATH)
+make_dirs(SAVE_D_LOSS_PATH)
 
 x_instrument, y_instrument = args.x, args.y
 
@@ -108,7 +112,7 @@ for epoch in range(start, EPOCHS):
         loss_history['Discriminator']['x'].append(xD.numpy())
         loss_history['Discriminator']['y'].append(yD.numpy())
 
-        if n % 10 == 0 and n != 0:
+        if n % 10 == 0:
             prediction_g = generator_g(test_x['data'])
             save_heatmap_npy(
                 prediction_g,
@@ -132,7 +136,14 @@ for epoch in range(start, EPOCHS):
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'Discriminator_x'))
 
-            save_loss_log(loss_history, SAVE_DB_PATH, n, epoch + 1)
+            save_loss_log(
+                loss_history['Generator'],
+                SAVE_G_LOSS_PATH,
+                n,
+                epoch + 1,
+            )
+            save_loss_log(loss_history['Discriminator'], SAVE_D_LOSS_PATH, n,
+                          epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()

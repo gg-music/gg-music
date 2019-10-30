@@ -1,24 +1,18 @@
 from .utils import make_dirs
 import os
-from pandas.io.json._normalize import nested_to_record
 import numpy as np
 
 
-def save_loss_log(hist, save_dir, n_steps, n_epoch, delimiter=','):
+def save_loss_log(hist, save_dir, n_steps, n_epoch):
     """
         n_steps/per file
     """
-    flat_hist = nested_to_record(hist, sep='_')
-    for model, npy in flat_hist.items():
-        folder = os.path.join(save_dir, f'{model[:-2]}_loss')
+    for npy in hist.values():
+        filename = f'epoch{n_epoch:02}_{n_steps:04}-loss.log'
 
-        make_dirs(folder)
-
-        filename = f'{model}_epoch{n_epoch:02}_{n_steps:04}-loss.log'
-
-        with open(os.path.join(folder, filename), 'w') as fp:
+        with open(os.path.join(save_dir, filename), 'a') as fp:
             for n in npy:
-                fp.write("{}{}".format(n, delimiter))
+                fp.write(f'{n},')
 
 
 def save_heatmap_npy(img, title, save_dir=None):
