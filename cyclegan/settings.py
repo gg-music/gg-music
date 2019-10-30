@@ -4,7 +4,7 @@ MUSIC_SRC_PATH = {
     'tfrecord': '/home/gtzan/data/gan_preprocessing/'
 }
 
-MUSIC_ROOT_PATH = '/home/gtzan/data'
+RAWDATA_ROOT_PATH = '/home/gtzan/data'
 MODEL_ROOT_PATH = '/home/gtzan/models'
 EPOCHS = 100
 DEFAULT_SAMPLING_RATE = 22050

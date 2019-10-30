@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 import audioread
 import numpy as np
 import os
@@ -119,5 +119,3 @@ def output2tfrecord(category_dir, file_name, batch_specs):
             writer.write(tf_example)
 
     print(f'{save_file}')
-
-

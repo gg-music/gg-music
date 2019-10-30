@@ -3,7 +3,7 @@ import argparse
 from functools import partial
 from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from .settings import MUSIC_ROOT_PATH
+from .settings import RAWDATA_ROOT_PATH
 from .helpers.utils import get_file_list
 from .helpers.signal import to_stft
 from .helpers.plot import plot_heat_map, plot_epoch_loss
@@ -34,9 +34,12 @@ if __name__ == '__main__':
 
     file_list = get_file_list(args.src_path)
 
+    dst = 'gan_preprocessing/npy'
+    if args.tfrecord:
+        dst = 'gan_preprocessing/tfrecords'
+
     par = partial(batch_processing,
-                  output_dir=os.path.join(MUSIC_ROOT_PATH,
-                                          'gan_preprocessing/tfrecords'),
+                  output_dir=os.path.join(RAWDATA_ROOT_PATH, dst),
                   spec_format=to_stft,
                   to_tfrecord=args.tfrecord)
 
