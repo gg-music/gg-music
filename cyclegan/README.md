@@ -28,5 +28,10 @@ gan_preprocessing/[tfrecords|npy]
 ```
 * command
 ```sh
-pythom -m cyclegan.preprocessing -s </path/to/wav/root> [--batch_size] [-tf]
+python -m cyclegan.preprocessing -s </path/to/pre_processed_data/root> [--batch_size] [-tf]
+```
+## plot
+* command
+```sh
+python -m cyclegan.plot_history -m {model_name}
 ```

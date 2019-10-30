@@ -2,10 +2,11 @@ from multiprocessing import Pool, cpu_count
 import audioread
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
-from cyclegan.helpers.signal import preprocessing_fn
+from .signal import preprocessing_fn
 from .utils import make_dirs
-from .plot import plot_heat_map
+from .plot import plot_heat_map, plot_epoch_loss_by_log
 
 
 def batch(iterable, n=1):
@@ -16,7 +17,7 @@ def batch(iterable, n=1):
 
 def processing(file_list, par, batch_size=10):
 
-    pool = Pool(processes=cpu_count(), maxtasksperchild=1)
+    pool = Pool(processes=1, maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
         pass
@@ -25,48 +26,17 @@ def processing(file_list, par, batch_size=10):
     pool.join()
 
 
-def batch_plot(batch_file_path, output_dir, **kwargs):
+def batch_plot(batch_file_path, output_dir):
     for file_path in batch_file_path:
         title = file_path.split('/')[-1].split('.')[0]
         save_dir = os.path.join(output_dir,
                                 os.path.join(file_path.split('/')[-2]))
         if 'npy' in file_path:
-            # print(np.load(file_path))
             plot_heat_map(np.load(file_path), title, save_dir)
         else:
-            pass
-        # if '.log' in file_path:
-        #     pass
-        # else:
-        #     """
-        #         npy
-        #     """
-        #     plot_heat_map()
-        # pass
-        # batch_specs = []
-        # try:
-        #     specs, _ = preprocessing_fn(file_path, spec_format, **kwargs)
-        # except ValueError:
-        #     os.remove(file_path)
-        #     print("\nremove zero file: " + file_path + "\n")
-        #     continue
-        # except audioread.exceptions.NoBackendError as err:
-        #     print("\n", err, file_path, "\n")
-        #     continue
-
-        # batch_specs.append(specs)
-        # batch_specs = np.array(batch_specs)
-
-        # file_name = os.path.basename(file_path).split('.')[-2]
-        # category = os.path.dirname(file_path).split('/')[-1]
-        # category_dir = os.path.join(output_dir, category)
-
-        # make_dirs(category_dir)
-
-        # if to_tfrecord:
-        #     output2tfrecord(category_dir, file_name, batch_specs)
-        # else:
-        #     output2raw(category_dir, file_name, batch_specs)
+            title = file_path.split('/')[-1].split('.')[0]
+            plot_epoch_loss_by_log(
+                np.genfromtxt(file_path, delimiter=',')[:-1], save_dir, title)
 
 
 def batch_processing(batch_file_path,
