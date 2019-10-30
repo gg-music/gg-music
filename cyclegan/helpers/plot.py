@@ -29,27 +29,6 @@ def init_plotter():
     return fig, ax
 
 
-def parallel_plot_heat_map(img, title, save_dir):
-    img = img[0, :, :, 0]
-    img = (img + 1) / 2
-    fig = plt.figure(figsize=(4, 4), dpi=100)
-    plt.plot(img)
-    plt.title(title)
-    output = os.path.join(save_dir, title + '.png')
-    fig.savefig(output, format='png', dpi=100)
-    # ax = sns.heatmap(img, vmin=0, vmax=1, ax=ax, cbar=False)
-    # ax.set_title(title)
-    # ax.invert_yaxis()
-
-    # if save_dir:
-    #     make_dirs(save_dir)
-    #     output = os.path.join(save_dir, title + '.png')
-    #     # plt.savefig(output, format='png', dpi=100)
-    #     # plt.close()
-    # else:
-    #     plt.show()
-
-
 def plot_heat_map(img, title, save_dir):
     img = img[0, :, :, 0]
     img = (img + 1) / 2

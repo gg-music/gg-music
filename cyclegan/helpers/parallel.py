@@ -26,26 +26,13 @@ def processing(file_list, par, batch_size=10):
     pool.join()
 
 
-def map_processing(file_list, par, batch_size=10):
-
-    pool = Pool(processes=1, maxtasksperchild=1)
-
-    for _ in pool.map(par, batch(file_list, batch_size)):
-        pass
-
-    pool.close()
-    pool.join()
-
-
 def batch_plot(batch_file_path, output_dir):
     for file_path in batch_file_path:
         title = file_path.split('/')[-1].split('.')[0]
         save_dir = os.path.join(output_dir,
                                 os.path.join(file_path.split('/')[-2]))
         if 'npy' in file_path:
-            parallel_plot_heat_map(np.load(file_path), title, save_dir)
-            # parallel_plot_heatmap(fig, ax, np.load(file_path), title,
-            #                       save_dir)
+            plot_heat_map(np.load(file_path), title, save_dir)
         else:
             pass
         # if '.log' in file_path:

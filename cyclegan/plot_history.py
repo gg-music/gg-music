@@ -10,6 +10,13 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True, help='model name', type=str)
+
+    ap.add_argument('-pd',
+                    '--plot_dst',
+                    required=True,
+                    help='plot npy or log',
+                    type=str)
+
     ap.add_argument('--batch_size',
                     required=False,
                     default=10,
@@ -17,17 +24,25 @@ if __name__ == '__main__':
                     type=int)
 
     args = ap.parse_args()
+
+    if args.plot_dst not in ('npy', 'log'):
+        raise ValueError('invalid plot_dst')
+
     root_path = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
     if not os.path.isdir(root_path):
         raise FileNotFoundError('Invalid src path')
-    log_path = os.path.join(root_path, 'logs')
+
+    src_folder = 'logs' if args.plot_dst == 'log' else 'npy'
+    src_path = os.path.join(root_path, src_folder)
     image_path = os.path.join(root_path, 'images')
-    file_list = get_file_list(log_path)
+
+    file_list = get_file_list(src_path)
 
     make_dirs(image_path)
+
     par = partial(batch_plot, output_dir=image_path)
 
-    map_processing(file_list, par, args.batch_size)
+    processing(file_list, par, args.batch_size)
 
 # def parallel_preprocessing(song_list,
 #                            output_dir,
