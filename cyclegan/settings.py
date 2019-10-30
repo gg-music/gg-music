@@ -5,7 +5,7 @@ MUSIC_SRC_PATH = {
 }
 
 MUSIC_ROOT_PATH = '/home/gtzan/data'
-MODEL_ROOT_PATH = '/home/gtzan/models'
+MODEL_ROOT_PATH = '/home/gtzan/ssd/models'
 EPOCHS = 100
 DEFAULT_SAMPLING_RATE = 22050
 DROPOUT_RATE = 0.5
@@ -13,5 +13,5 @@ BN_AXIS = 3
 PAD_SIZE = ((0, 0), (1, 0))
 STEPS = 400
 
-INPUT_FILE = [['/home/gtzan/data/gan/wav/sounds/guitar1/guitar1-377.wav', 'f'],
-              ['/home/gtzan/data/gan/wav/sounds/piano1/piano1-377.wav', 'g']]
+INPUT_FILE = [['/home/gtzan/data/gan/wav/sax/sax-001.wav', 'f'],
+              ['/home/gtzan/data/gan/wav/cello/cello-005.wav', 'g']]

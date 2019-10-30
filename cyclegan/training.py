@@ -9,6 +9,7 @@ from tqdm import tqdm
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
+from .helpers.plot import plot_heat_map, plot_epoch_loss
 from .model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
@@ -52,10 +53,14 @@ for example_x, example_y in tf.data.Dataset.zip(
     example_y = tf.train.Example.FromString(example_y.numpy())
     test_x = extract_example(example_x)
     test_y = extract_example(example_y)
-    save_heatmap_npy(test_x['data'],
+    save_heatmap_npy(
+    # plot_heat_map(
+                     test_x['data'],
                      '{}_reference'.format(x_instrument),
                      save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_g'))
-    save_heatmap_npy(test_y['data'],
+    save_heatmap_npy(
+    # plot_heat_map(
+                     test_y['data'],
                      '{}_reference'.format(y_instrument),
                      save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_f'))
 
@@ -102,7 +107,8 @@ for epoch in range(start, EPOCHS):
 
         gG, fG, xD, yD = train_step(image_x['data'],
                                     image_y['data'],
-                                    update='gfd')
+                                    update='gd')
+        train_step(image_x['data'], image_y['data'], update='d')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
@@ -112,33 +118,38 @@ for epoch in range(start, EPOCHS):
         if n % 10 == 0 and n != 0:
             prediction_g = generator_g(test_x['data'])
             save_heatmap_npy(
+            # plot_heat_map(
                 prediction_g,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_NPY_PATH, 'Generator_g'))
             prediction_f = generator_f(test_y['data'])
             save_heatmap_npy(
+            # plot_heat_map(
                 prediction_f,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
                 os.path.join(SAVE_NPY_PATH, 'Generator_f'))
 
             prediction_y = discriminator_y(prediction_g)
             save_heatmap_npy(
+            # plot_heat_map(
                 prediction_y,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
                 os.path.join(SAVE_NPY_PATH, 'Discriminator_y'))
 
             prediction_x = discriminator_x(prediction_f)
             save_heatmap_npy(
+            # plot_heat_map(
                 prediction_x,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_NPY_PATH, 'Discriminator_x'))
 
             save_loss_log(loss_history, SAVE_LOG_PATH, n, epoch + 1)
+            # plot_epoch_loss(loss_history, SAVE_LOG_PATH, n, epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
     print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
                                                         ckpt_save_path))
 
-    print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
-                                                       time.time() - start))
+    print('Time taken for epoch {} is {} sec, total loss {}\n'.format(epoch + 1,
+                                                       time.time() - start), )

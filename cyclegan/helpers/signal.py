@@ -50,12 +50,34 @@ def to_stft(audio, nfft=1024, normalize=True, crop_hf=True):
 
 def inverse_stft(mag, phase, nfft=1024, normalize=True, crop_hf=True):
     window = np.hanning(nfft)
-    if (normalize):
+    if normalize:
         mag = mag * np.sum(np.hanning(nfft)) / 2
-    if (crop_hf):
+    if crop_hf:
         mag = add_hf(mag, target_shape=(phase.shape[0], mag.shape[1]))
     R = mag * np.exp(1j * phase)
     audio = librosa.istft(R, hop_length=int(nfft / 2), window=window)
+    return audio
+
+
+def to_cqt(audio, nfft=1024, normalize=True, crop_hf=True):
+    window = np.hanning(nfft)
+    S = librosa.cqt(audio, n_fft=nfft, hop_length=int(nfft / 2), window=window)
+    mag, phase = np.abs(S), np.angle(S)
+    if crop_hf:
+        mag = remove_hf(mag)
+    if normalize:
+        mag = 2 * mag / np.sum(window)
+    return mag, phase
+
+
+def inverse_cqt(mag, phase, nfft=1024, normalize=True, crop_hf=True):
+    window = np.hanning(nfft)
+    if normalize:
+        mag = mag * np.sum(np.hanning(nfft)) / 2
+    if crop_hf:
+        mag = add_hf(mag, target_shape=(phase.shape[0], mag.shape[1]))
+    R = mag * np.exp(1j * phase)
+    audio = librosa.icqt(R, hop_length=int(nfft / 2), window=window)
     return audio
 
 
@@ -69,13 +91,13 @@ def join_magnitude_slices(mag_sliced, target_shape):
 
 def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
     mag_db = 20 * np.log1p(mag / amin)
-    if (normalize):
+    if normalize:
         mag_db /= 20 * np.log1p(1 / amin)
     return mag_db
 
 
 def db_to_amplitude(mag_db, amin=1 / (2 ** 16), normalize=True):
-    if (normalize):
+    if normalize:
         mag_db *= 20 * np.log1p(1 / amin)
     return amin * np.expm1(mag_db / 20)
 

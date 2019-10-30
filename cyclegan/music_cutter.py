@@ -10,20 +10,20 @@ parser.add_argument('-s',
                     help='n seconds per part',
                     type=float,
                     required=True)
-parser.add_argument('-f',
-                    '--file',
+parser.add_argument('-i',
+                    '--input',
                     help='input file location',
                     type=str,
                     required=True)
 
 args = parser.parse_args()
 try:
-    raw_audio = AudioSegment.from_wav(args.file)
+    raw_audio = AudioSegment.from_wav(args.input)
 except Exception as e:
     raise e
 
 spilit_time = args.seconds * 1000
-prefix = args.file.split('/')[-1][0:-4]
+prefix = args.input.split('/')[-1][0:-4]
 
 output_dir = f'/home/gtzan/data/gan_preprocessing/wav/{prefix}'
 
