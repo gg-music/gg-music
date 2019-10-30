@@ -37,6 +37,7 @@ def batch_plot(batch_file_path, output_dir):
             title = file_path.split('/')[-1].split('.')[0]
             plot_epoch_loss_by_log(
                 np.genfromtxt(file_path, delimiter=',')[:-1], save_dir, title)
+        print(title)
 
 
 def batch_processing(batch_file_path,
