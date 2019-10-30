@@ -100,7 +100,8 @@ for epoch in range(start, EPOCHS):
 
         gG, fG, xD, yD = train_step(image_x['data'],
                                     image_y['data'],
-                                    update='gfd')
+                                    update='gd')
+        train_step(image_x['data'], image_y['data'], update='d')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())

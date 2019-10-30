@@ -1,12 +1,12 @@
 FROM tensorflow/tensorflow:2.0.0-gpu-py3-jupyter
 
 RUN sed -i 's/archive.ubuntu.com/free.nchc.org.tw/g' /etc/apt/sources.list
-RUN apt-get update && apt-get upgrade -y && apt-get install sudo openssh-server vim htop screen reptyr libsndfile1 ffmpeg git -y
+RUN apt-get update && apt-get upgrade -y && apt-get install sudo openssh-server vim htop screen reptyr youtube-dl libsndfile1 ffmpeg git -y
 
 RUN echo '%staff   ALL=(ALL:ALL) ALL' >> /etc/sudoers
 RUN pip install --upgrade pip
 
-RUN python -m pip --no-cache-dir install --upgrade virtualenv numpy scipy matplotlib pandas keras scikit-learn sklearn scikit-image seaborn opencv-python Pillow librosa tqdm pydub 
+RUN python -m pip --no-cache-dir install --upgrade virtualenv numpy scipy matplotlib pandas keras scikit-learn sklearn scikit-image seaborn librosa tqdm pydub
 
 RUN mkdir /var/run/sshd
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
