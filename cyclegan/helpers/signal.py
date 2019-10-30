@@ -118,7 +118,7 @@ def preprocessing_fn(file_path,
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
-        trim_length = sr * trim
+        trim_length = int(sr * trim)
         signal = signal[:trim_length]
 
     if split:
