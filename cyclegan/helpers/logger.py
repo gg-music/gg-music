@@ -10,7 +10,7 @@ def save_loss_log(hist, save_dir, n_steps, n_epoch, delimiter=','):
     """
     flat_hist = nested_to_record(hist, sep='_')
     for model, npy in flat_hist.items():
-        folder = os.path.join(save_dir, model)
+        folder = os.path.join(save_dir, f'{model[:-2]}_loss')
 
         make_dirs(folder)
 

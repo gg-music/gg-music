@@ -27,11 +27,9 @@ y_rawset_path = os.path.join(RAWSET_PATH, args.y)
 check_rawdata_exists(x_rawset_path, y_rawset_path)
 
 SAVE_MODEL_PATH = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
-SAVE_NPY_PATH = os.path.join(SAVE_MODEL_PATH, 'npy')
-SAVE_LOG_PATH = os.path.join(SAVE_MODEL_PATH, 'logs')
+SAVE_DB_PATH = os.path.join(SAVE_MODEL_PATH, 'db')
 
-make_dirs(SAVE_MODEL_PATH)
-make_dirs(SAVE_LOG_PATH)
+make_dirs(SAVE_DB_PATH)
 
 x_instrument, y_instrument = args.x, args.y
 
@@ -54,10 +52,10 @@ for example_x, example_y in tf.data.Dataset.zip(
     test_y = extract_example(example_y)
     save_heatmap_npy(test_x['data'],
                      '{}_reference'.format(x_instrument),
-                     save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_g'))
+                     save_dir=os.path.join(SAVE_DB_PATH, 'Generator_g'))
     save_heatmap_npy(test_y['data'],
                      '{}_reference'.format(y_instrument),
-                     save_dir=os.path.join(SAVE_NPY_PATH, 'test/Generator_f'))
+                     save_dir=os.path.join(SAVE_DB_PATH, 'Generator_f'))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -114,26 +112,26 @@ for epoch in range(start, EPOCHS):
             save_heatmap_npy(
                 prediction_g,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_NPY_PATH, 'Generator_g'))
+                os.path.join(SAVE_DB_PATH, 'Generator_g'))
             prediction_f = generator_f(test_y['data'])
             save_heatmap_npy(
                 prediction_f,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_NPY_PATH, 'Generator_f'))
+                os.path.join(SAVE_DB_PATH, 'Generator_f'))
 
             prediction_y = discriminator_y(prediction_g)
             save_heatmap_npy(
                 prediction_y,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_NPY_PATH, 'Discriminator_y'))
+                os.path.join(SAVE_DB_PATH, 'Discriminator_y'))
 
             prediction_x = discriminator_x(prediction_f)
             save_heatmap_npy(
                 prediction_x,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_NPY_PATH, 'Discriminator_x'))
+                os.path.join(SAVE_DB_PATH, 'Discriminator_x'))
 
-            save_loss_log(loss_history, SAVE_LOG_PATH, n, epoch + 1)
+            save_loss_log(loss_history, SAVE_DB_PATH, n, epoch + 1)
 
         n += 1
     ckpt_save_path = ckpt_manager.save()
