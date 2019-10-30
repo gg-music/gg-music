@@ -2,10 +2,11 @@ from multiprocessing import Pool, cpu_count
 import audioread
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
-from cyclegan.helpers.signal import preprocessing_fn
+from .signal import preprocessing_fn
 from .utils import make_dirs
-from .plot import plot_heat_map
+from .plot import plot_heat_map, parallel_plot_heat_map
 
 
 def batch(iterable, n=1):
@@ -16,7 +17,7 @@ def batch(iterable, n=1):
 
 def processing(file_list, par, batch_size=10):
 
-    pool = Pool(processes=cpu_count(), maxtasksperchild=1)
+    pool = Pool(processes=1, maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
         pass
@@ -25,14 +26,26 @@ def processing(file_list, par, batch_size=10):
     pool.join()
 
 
-def batch_plot(batch_file_path, output_dir, **kwargs):
+def map_processing(file_list, par, batch_size=10):
+
+    pool = Pool(processes=1, maxtasksperchild=1)
+
+    for _ in pool.map(par, batch(file_list, batch_size)):
+        pass
+
+    pool.close()
+    pool.join()
+
+
+def batch_plot(batch_file_path, output_dir):
     for file_path in batch_file_path:
         title = file_path.split('/')[-1].split('.')[0]
         save_dir = os.path.join(output_dir,
                                 os.path.join(file_path.split('/')[-2]))
         if 'npy' in file_path:
-            # print(np.load(file_path))
-            plot_heat_map(np.load(file_path), title, save_dir)
+            parallel_plot_heat_map(np.load(file_path), title, save_dir)
+            # parallel_plot_heatmap(fig, ax, np.load(file_path), title,
+            #                       save_dir)
         else:
             pass
         # if '.log' in file_path:

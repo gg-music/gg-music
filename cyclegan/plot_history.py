@@ -2,8 +2,10 @@ import os
 import argparse
 from functools import partial
 from .helpers.utils import get_file_list, make_dirs
-from .helpers.parallel import batch_plot, processing
+from .helpers.parallel import batch_plot, processing, map_processing
 from .settings import MODEL_ROOT_PATH
+from .helpers.plot import init_plotter
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
@@ -17,16 +19,15 @@ if __name__ == '__main__':
     args = ap.parse_args()
     root_path = os.path.join(MODEL_ROOT_PATH, os.path.basename(args.model))
     if not os.path.isdir(root_path):
-        raise NotADirectoryError('Invalid src path')
+        raise FileNotFoundError('Invalid src path')
     log_path = os.path.join(root_path, 'logs')
     image_path = os.path.join(root_path, 'images')
     file_list = get_file_list(log_path)
 
     make_dirs(image_path)
-
     par = partial(batch_plot, output_dir=image_path)
 
-    processing(file_list, par, args.batch_size)
+    map_processing(file_list, par, args.batch_size)
 
 # def parallel_preprocessing(song_list,
 #                            output_dir,
