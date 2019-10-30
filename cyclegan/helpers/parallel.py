@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from .signal import preprocessing_fn
 from .utils import make_dirs
-from .plot import plot_heat_map, parallel_plot_heat_map
+from .plot import plot_heat_map
 
 
 def batch(iterable, n=1):

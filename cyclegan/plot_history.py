@@ -2,7 +2,7 @@ import os
 import argparse
 from functools import partial
 from .helpers.utils import get_file_list, make_dirs
-from .helpers.parallel import batch_plot, processing, map_processing
+from .helpers.parallel import batch_plot, processing
 from .settings import MODEL_ROOT_PATH
 from .helpers.plot import init_plotter
 import matplotlib.pyplot as plt
