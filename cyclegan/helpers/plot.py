@@ -5,20 +5,30 @@ from .utils import make_dirs
 
 
 def plot_epoch_loss_by_log(logs, save_dir, title):
+    models = {'Generator': 'fg',
+              'Discriminator': 'xy'}
+    model_type = os.path.basename(save_dir).split('_')[-2]
+
     plt.figure(figsize=(4, 4), dpi=100)
     log_1st = logs[:logs.size // 2]
     log_2nd = logs[logs.size // 2:]
-    plt.plot(log_1st, label=title)
-    plt.plot(log_2nd, label=title)
-    plt.title(title)
+    plt.plot(log_1st, label=f'{model_type}_{models[model_type][0]}')
+    plt.plot(log_2nd, label=f'{model_type}_{models[model_type][1]}')
+    plt.title(f'{model_type}_{title}')
     plt.xlabel('Steps')
     plt.ylabel('Loss')
-    plt.xlim(left=max(0, len(log_1st) - 200), right=max(200, len(log_1st)))
+    left = max(0, len(log_1st) - 200)
+    right = max(200, len(log_1st))
+    top = max(max(log_1st[left:right]), max(log_2nd[left:right]), 1)
+    down = min(min(log_1st[left:right]), min(log_2nd[left:right]), 0.5)
+    bound = (top - down) * 0.1
+    plt.xlim(left=left, right=right)
+    plt.ylim(down-bound, top+bound)
     plt.legend()
 
     make_dirs(save_dir)
 
-    output_path = os.path.join(save_dir, f'{title}.png')
+    output_path = os.path.join(save_dir, f'{model_type}_{title}.png')
     plt.savefig(output_path, format='png', dpi=100)
     plt.close()
 

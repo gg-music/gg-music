@@ -1,10 +1,11 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
 import tensorflow as tf
 from .helpers import signal
 from .helpers.utils import make_dirs
-from cyclegan.helpers.signal import preprocessing_fn
+from .helpers.signal import preprocessing_fn
 from .model_settings import *
 from .settings import DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH, INPUT_FILE
 
@@ -14,7 +15,6 @@ def predict(model, input_filename, output_filename):
                                   spec_format=signal.to_stft,
                                   trim=5.9)
     mag = mag[np.newaxis, :]
-
     prediction = model.predict(mag)
     prediction = (prediction + 1) / 2
 
@@ -50,13 +50,13 @@ if __name__ == "__main__":
     last_epoch = len(ckpt_manager.checkpoints)
 
     if args.epoch:
-        epoch = args.epoch
-        print('Checkpoint epoch {} restored!!'.format(last_epoch))
+        epoch = int(args.epoch)
+        ckpt.restore(ckpt_manager.checkpoints[epoch - 1])
+        print('Checkpoint epoch {} restored!!'.format(epoch))
     else:
         epoch = last_epoch
-        print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
-    epoch -= 1
-    ckpt.restore(ckpt_manager.checkpoints[epoch])
+        ckpt.restore(ckpt_manager.checkpoints[epoch - 1])
+        print('Latest checkpoint epoch {} restored!!'.format(epoch))
 
     models = {'g': generator_g,
               'f': generator_f}
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     for wav, model in INPUT_FILE:
 
         output_file = os.path.join(WAV_PATH,
-                                   os.path.basename(ckpt_manager.checkpoints[epoch])
+                                   os.path.basename(ckpt_manager.checkpoints[epoch-1])
                                    + "-" + os.path.basename(wav))
 
         predict(models[model], wav, output_file)

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-LAMBDA = 10
+LAMBDA = 0.5
 loss_obj = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
 

@@ -59,25 +59,25 @@ def inverse_stft(mag, phase, nfft=1024, normalize=True, crop_hf=True):
     return audio
 
 
-def to_cqt(audio, nfft=1024, normalize=True, crop_hf=True):
-    window = np.hanning(nfft)
-    S = librosa.cqt(audio, n_fft=nfft, hop_length=int(nfft / 2), window=window)
+def to_cqt(audio, nfft=1024, normalize=True):
+    window = np.hanning(int(nfft))
+    S = librosa.cqt(audio, n_bins=512, bins_per_octave=12*8,
+                    hop_length=int(nfft/2),
+                    fmin=librosa.note_to_hz('A2'))
     mag, phase = np.abs(S), np.angle(S)
-    if crop_hf:
-        mag = remove_hf(mag)
     if normalize:
         mag = 2 * mag / np.sum(window)
     return mag, phase
 
 
-def inverse_cqt(mag, phase, nfft=1024, normalize=True, crop_hf=True):
-    window = np.hanning(nfft)
+def inverse_cqt(mag, phase, nfft=1024, normalize=True):
+    window = np.hanning(int(nfft))
     if normalize:
         mag = mag * np.sum(np.hanning(nfft)) / 2
-    if crop_hf:
-        mag = add_hf(mag, target_shape=(phase.shape[0], mag.shape[1]))
     R = mag * np.exp(1j * phase)
-    audio = librosa.icqt(R, hop_length=int(nfft / 2), window=window)
+    audio = librosa.icqt(R, hop_length=int(nfft/2),
+                         bins_per_octave=12*8,
+                         fmin=librosa.note_to_hz('A2'))
     return audio
 
 

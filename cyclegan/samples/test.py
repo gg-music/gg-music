@@ -19,6 +19,7 @@ discriminator_x = Discriminator(norm_type='instancenorm', target=False)
 for example_x in x_test_dataset:
     example_x = tf.train.Example.FromString(example_x.numpy())
     test_x = extract_example(example_x)
+    print(test_x['data'].shape)
     plot_heat_map(test_x['data'],title='real_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
     fake_x = generator_g(test_x['data'])
     plot_heat_map(fake_x, title='fake_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')

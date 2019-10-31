@@ -5,7 +5,7 @@ from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from .settings import RAWDATA_ROOT_PATH
 from .helpers.utils import get_file_list
-from .helpers.signal import to_stft
+from .helpers.signal import to_stft, to_cqt
 from .helpers.plot import plot_heat_map, plot_epoch_loss
 
 if __name__ == '__main__':
@@ -15,7 +15,8 @@ if __name__ == '__main__':
                     required=True,
                     help='file src folder root path',
                     type=str)
-    ap.add_argument('--batch_size',
+    ap.add_argument('-b',
+                    '--batch_size',
                     required=False,
                     default=10,
                     help='files per batch',
