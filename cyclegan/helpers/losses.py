@@ -10,7 +10,7 @@ def discriminator_loss(real, generated):
     generated_loss = loss_obj(tf.zeros_like(generated)+random, generated)
     total_disc_loss = real_loss + generated_loss
 
-    return total_disc_loss * 20
+    return total_disc_loss * 200
 
 @tf.function
 def generator_loss(generated):
