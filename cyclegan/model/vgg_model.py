@@ -19,17 +19,19 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
 
     conv1 = Conv2D(512, (4, 1), strides=1, padding='same',
                    kernel_initializer=initializer)(vgg16.layers[-2].output)
-    drop1 = Dropout(0.5)(conv1)
-    conv2 = Conv2D(512, (4, 1), strides=1, activation='relu', kernel_initializer=initializer)(drop1)
-    drop2 = Dropout(0.5)(conv2)
-    conv3 = Conv2D(512, (4, 1), strides=1, activation='relu', kernel_initializer=initializer)(drop2)
-    drop3 = Dropout(0.5)(conv3)
-    conv4 = Conv2D(512, (4, 1), strides=1, activation='relu', kernel_initializer=initializer)(drop3)
-    drop4 = Dropout(0.5)(conv4)
-    conv5 = Conv2D(512, (4, 1), strides=1, activation='relu', kernel_initializer=initializer)(drop4)
-    drop5 = Dropout(0.5)(conv5)
-    conv6 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(drop5)
-    drop6 = Dropout(0.5)(conv6)
+    conv2 = Conv2D(512, (4, 1), strides=1, activation='relu',
+                   kernel_initializer=initializer)(conv1)
+    conv3 = Conv2D(512, (4, 1), strides=1, activation='relu',
+                   kernel_initializer=initializer)(conv2)
+    drop3 = Dropout(0.1)(conv3)
+
+    conv4 = Conv2D(512, (4, 1), strides=1, activation='relu',
+                   kernel_initializer=initializer)(drop3)
+    conv5 = Conv2D(512, (4, 1), strides=1, activation='relu',
+                   kernel_initializer=initializer)(conv4)
+    conv6 = Conv2D(512, (4, 1), strides=1,
+                   kernel_initializer=initializer)(conv5)
+    drop6 = Dropout(0.1)(conv6)
 
     if norm_type.lower() == 'batchnorm':
         norm1 = BatchNormalization()(drop6)
