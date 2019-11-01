@@ -27,7 +27,11 @@ if __name__ == '__main__':
 
     image_path = os.path.join(root_path, 'images')
     make_dirs(image_path)
-
-    par = partial(batch_plot, output_dir=image_path)
+    existing_images = [
+        name.split('/')[-1][:-4] for name in get_file_list(image_path)
+    ]
+    par = partial(batch_plot,
+                  output_dir=image_path,
+                  existing_images=existing_images)
 
     processing(file_list, par, args.batch_size)
