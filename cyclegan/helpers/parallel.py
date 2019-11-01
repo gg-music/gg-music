@@ -25,18 +25,21 @@ def processing(file_list, par, batch_size=10):
     pool.join()
 
 
-def batch_plot(batch_file_path, output_dir):
+def batch_plot(batch_file_path, output_dir, existing_images):
     for file_path in batch_file_path:
-        title = file_path.split('/')[-1].split('.')[0]
+
+        title = file_path.split('/')[-1][:-4]
+
+        if title in existing_images:
+            continue
+
         save_dir = os.path.join(output_dir,
                                 os.path.join(file_path.split('/')[-2]))
         if 'npy' in file_path:
             plot_heat_map(np.load(file_path), title, save_dir)
         else:
-            title = file_path.split('/')[-1].split('.')[0]
             plot_epoch_loss_by_log(
                 np.genfromtxt(file_path, delimiter=',')[:-1], save_dir, title)
-        print(title)
 
 
 def batch_processing(batch_file_path,
