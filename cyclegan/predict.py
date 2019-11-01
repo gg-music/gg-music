@@ -64,7 +64,8 @@ if __name__ == "__main__":
     for wav, model in INPUT_FILE:
 
         output_file = os.path.join(WAV_PATH,
-                                   os.path.basename(ckpt_manager.checkpoints[epoch-1])
+                                   args.model
+                                   + "-" + os.path.basename(ckpt_manager.checkpoints[epoch-1])
                                    + "-" + os.path.basename(wav))
 
         predict(models[model], wav, output_file)

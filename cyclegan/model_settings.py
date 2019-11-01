@@ -118,7 +118,7 @@ def train_step(real_x, real_y, update='gd'):
             discriminator_y_optimizer.apply_gradients(
                 zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
-        return gen_g_loss, gen_f_loss, disc_x_loss, disc_y_loss
+    return gen_g_loss, gen_f_loss, disc_x_loss, disc_y_loss
 
 if __name__ == '__main__':
     print(generator_g.summary())

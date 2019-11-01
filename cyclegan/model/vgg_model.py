@@ -5,7 +5,7 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from .pix2pix import InstanceNormalization
 
 
-def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=True):
+def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False):
     initializer = tf.random_normal_initializer(0., 0.02)
     inp = Input(shape=input_shape, name='input_image')
     x = inp
@@ -17,8 +17,8 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=True)
     vgg16 = VGG16(include_top=False, weights='imagenet',
                   input_tensor=x)
 
-    zero_pad1 = ZeroPadding2D()(vgg16.output)
-    conv = Conv2D(512, 1, strides=1, kernel_initializer=initializer)(zero_pad1)
+    conv = Conv2D(512, 1, strides=1, padding='same',
+                  kernel_initializer=initializer)(vgg16.layers[-2].output)
 
     if norm_type.lower() == 'batchnorm':
         norm1 = BatchNormalization()(conv)
@@ -27,11 +27,9 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=True)
 
     leaky_relu = LeakyReLU()(norm1)
 
-    zero_pad2 = ZeroPadding2D()(leaky_relu)  # (bs, 33, 33, 512)
-
     last = tf.keras.layers.Conv2D(
-        1, 4, strides=1,
-        kernel_initializer=initializer)(zero_pad2)  # (bs, 30, 30, 1)
+        1, 4, strides=1, padding='same',
+        kernel_initializer=initializer)(leaky_relu)
 
     if target:
         return tf.keras.Model(inputs=[inp, tar], outputs=last)

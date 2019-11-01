@@ -28,7 +28,7 @@ def plot_epoch_loss_by_log(logs, save_dir, title):
 
     make_dirs(save_dir)
 
-    output_path = os.path.join(save_dir, f'{model_type}_{title}.png')
+    output_path = os.path.join(save_dir, f'{title}.png')
     plt.savefig(output_path, format='png', dpi=100)
     plt.close()
 
