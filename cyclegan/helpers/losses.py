@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-LAMBDA = 100
+LAMBDA = 10
 loss_obj = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
 @tf.function
@@ -27,5 +27,4 @@ def calc_cycle_loss(real_image, cycled_image):
 @tf.function
 def identity_loss(real_image, same_image):
     loss = tf.reduce_mean(tf.abs(real_image - same_image))
-
     return LAMBDA * 0.01 * loss

@@ -14,7 +14,7 @@ def plot_epoch_loss_by_log(logs, save_dir, title):
     log_2nd = logs[logs.size // 2:]
     plt.plot(log_1st, label=f'{model_type}_{models[model_type][0]}')
     plt.plot(log_2nd, label=f'{model_type}_{models[model_type][1]}')
-    plt.title(f'{model_type}_{title}')
+    plt.title(f'{title}')
     plt.xlabel('Steps')
     plt.ylabel('Loss')
     left = max(0, len(log_1st) - 200)
