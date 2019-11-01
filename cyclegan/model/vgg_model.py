@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Input, LeakyReLU, ZeroPadding2D
+from tensorflow.keras.layers import Input, LeakyReLU, ZeroPadding2D, MaxPool2D
 from tensorflow.keras.layers import BatchNormalization, concatenate, Conv2D
 from tensorflow.keras.applications.vgg16 import VGG16
 from .pix2pix import InstanceNormalization
@@ -17,13 +17,18 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
     vgg16 = VGG16(include_top=False, weights='imagenet',
                   input_tensor=x)
 
-    conv = Conv2D(512, 1, strides=1, padding='same',
-                  kernel_initializer=initializer)(vgg16.layers[-2].output)
+    conv1 = Conv2D(512, (4, 1), strides=1, padding='same',
+                   kernel_initializer=initializer)(vgg16.layers[-2].output)
+    conv2 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(conv1)
+    conv3 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(conv2)
+    conv4 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(conv3)
+    conv5 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(conv4)
+    conv6 = Conv2D(512, (4, 1), strides=1, kernel_initializer=initializer)(conv5)
 
     if norm_type.lower() == 'batchnorm':
-        norm1 = BatchNormalization()(conv)
+        norm1 = BatchNormalization()(conv6)
     elif norm_type.lower() == 'instancenorm':
-        norm1 = InstanceNormalization()(conv)
+        norm1 = InstanceNormalization()(conv6)
 
     leaky_relu = LeakyReLU()(norm1)
 
