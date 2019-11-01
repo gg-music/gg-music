@@ -48,7 +48,7 @@ python -m cyclegan.predict -m <model_name> -x <instrument_from> -y <instrument_t
 
 * movie maker
 ```sh
-./movie_maker.sh <model_path>
+./movie_maker.sh <model_name>
 ```
 
 * plot

@@ -48,18 +48,18 @@ y_train_dataset = tf.data.TFRecordDataset(
 x_test_dataset = tf.data.TFRecordDataset(x_list[STEPS])
 y_test_dataset = tf.data.TFRecordDataset(y_list[STEPS])
 
-for example_x, example_y in tf.data.Dataset.zip(
-    (x_test_dataset, y_test_dataset)):
+for example_x, example_y in \
+    tf.data.Dataset.zip((x_test_dataset, y_test_dataset)):
     example_x = tf.train.Example.FromString(example_x.numpy())
     example_y = tf.train.Example.FromString(example_y.numpy())
     test_x = extract_example(example_x)
     test_y = extract_example(example_y)
     save_heatmap_npy(test_x['data'],
                      '{}_reference'.format(x_instrument),
-                     save_dir=os.path.join(SAVE_DB_PATH, 'Generator_g'))
+                     save_dir=os.path.join(SAVE_DB_PATH, 'fake_y'))
     save_heatmap_npy(test_y['data'],
                      '{}_reference'.format(y_instrument),
-                     save_dir=os.path.join(SAVE_DB_PATH, 'Generator_f'))
+                     save_dir=os.path.join(SAVE_DB_PATH, 'fake_x'))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -110,35 +110,47 @@ for epoch in range(start, EPOCHS):
         loss_history['Discriminator']['y'].append(yD.numpy())
 
         if n % 10 == 0:
-            prediction_g = generator_g(test_x['data'])
+            # generate fake
+            fake_y = generator_g(test_x['data'])
             save_heatmap_npy(
-                prediction_g,
+                fake_y,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_DB_PATH, 'Generator_g'))
-            prediction_f = generator_f(test_y['data'])
+                os.path.join(SAVE_DB_PATH, 'fake_y'))
+            fake_x = generator_f(test_y['data'])
             save_heatmap_npy(
-                prediction_f,
+                fake_x,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_DB_PATH, 'Generator_f'))
+                os.path.join(SAVE_DB_PATH, 'fake_x'))
 
-            prediction_y = discriminator_y(prediction_g)
+            # disc fake
+            disc_fake_y = discriminator_y(fake_y)
             save_heatmap_npy(
-                prediction_y,
-                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
-                os.path.join(SAVE_DB_PATH, 'Discriminator_y'))
+                disc_fake_y,
+                'disc_fake_y_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                os.path.join(SAVE_DB_PATH, 'disc_fake_y'))
 
-            prediction_x = discriminator_x(prediction_f)
+            disc_fake_x = discriminator_x(fake_x)
             save_heatmap_npy(
-                prediction_x,
-                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
-                os.path.join(SAVE_DB_PATH, 'Discriminator_x'))
+                disc_fake_x,
+                'disc_fake_x_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
-            save_loss_log(
-                loss_history['Generator'],
-                SAVE_G_LOSS_PATH,
-                n,
-                epoch + 1,
-            )
+            # disc real
+            disc_real_y = discriminator_y(test_y['data'])
+            save_heatmap_npy(
+                disc_real_y,
+                'disc_real_y_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                os.path.join(SAVE_DB_PATH, 'disc_real_y'))
+
+            disc_real_x = discriminator_x(test_x['data'])
+            save_heatmap_npy(
+                disc_real_x,
+                'disc_real_x_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                os.path.join(SAVE_DB_PATH, 'disc_real_x'))
+
+            # save loss
+            save_loss_log(loss_history['Generator'], SAVE_G_LOSS_PATH, n,
+                          epoch + 1, )
             save_loss_log(loss_history['Discriminator'], SAVE_D_LOSS_PATH, n,
                           epoch + 1)
 

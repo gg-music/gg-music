@@ -56,10 +56,14 @@ def plot_epoch_loss(hist, save_dir, n_steps, n_epoch):
 def plot_heat_map(img, title, save_dir):
     img = img[0, :, :, 0]
     img = (img + 1) / 2
-    fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+    if 'disc' in title:
+        fig, ax = plt.subplots(figsize=(4, 2), dpi=100)
+    else:
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
     ax = sns.heatmap(img, vmin=0, vmax=1, ax=ax, cbar=False)
     ax.set_title(title)
     ax.invert_yaxis()
+    ax.axis('off')
 
     if save_dir:
         make_dirs(save_dir)
