@@ -20,12 +20,18 @@ def generator_loss(generated):
 
 @tf.function
 def calc_cycle_loss(real_image, cycled_image):
-    loss1 = tf.reduce_mean(tf.abs(real_image - cycled_image))
+    loss = tf.reduce_mean(tf.abs(real_image - cycled_image))
 
-    return LAMBDA * loss1
+    return LAMBDA * loss * 0.5
 
 
 @tf.function
 def identity_loss(real_image, same_image):
     loss = tf.reduce_mean(tf.abs(real_image - same_image))
-    return LAMBDA * loss * 0.01
+    return LAMBDA * loss * 0.1
+
+
+@tf.function
+def differ_loss(real_image, generated):
+    loss = 1 / (tf.reduce_mean(tf.abs(real_image - generated)) + 1)
+    return LAMBDA * loss * 0.1

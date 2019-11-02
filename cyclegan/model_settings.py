@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
 from .model.vgg_model import vgg16_model as Discriminator
-from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, discriminator_loss
+from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, differ_loss, discriminator_loss
 
 # Generator G translates X -> Y
 # Generator F translates Y -> X.
@@ -77,10 +77,8 @@ def train_step(real_x, real_y, update='gd'):
                 real_x, cycled_x) + calc_cycle_loss(real_y, cycled_y)
 
             # Total generator loss = adversarial loss + cycle loss
-            total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss(
-                real_y, same_y)
-            total_gen_f_loss = gen_f_loss + total_cycle_loss + identity_loss(
-                real_x, same_x)
+            total_gen_g_loss = gen_g_loss + total_cycle_loss
+            total_gen_f_loss = gen_f_loss + total_cycle_loss
 
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
@@ -119,6 +117,7 @@ def train_step(real_x, real_y, update='gd'):
                 zip(discriminator_y_gradients, discriminator_y.trainable_variables))
 
     return gen_g_loss, gen_f_loss, disc_x_loss, disc_y_loss
+
 
 if __name__ == '__main__':
     print(generator_g.summary())
