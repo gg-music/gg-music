@@ -24,6 +24,7 @@ def plot_epoch_loss_by_log(logs, save_dir, title):
     bound = (top - down) * 0.1
     plt.xlim(left=left, right=right)
     plt.ylim(down-bound, top+bound)
+    plt.xticks([])
     plt.legend()
 
     make_dirs(save_dir)

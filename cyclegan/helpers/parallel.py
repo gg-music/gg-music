@@ -25,13 +25,10 @@ def processing(file_list, par, batch_size=10):
     pool.join()
 
 
-def batch_plot(batch_file_path, output_dir, existing_images):
+def batch_plot(batch_file_path, output_dir):
     for file_path in batch_file_path:
 
         title = file_path.split('/')[-1][:-4]
-
-        if title in existing_images:
-            continue
 
         save_dir = os.path.join(output_dir,
                                 os.path.join(file_path.split('/')[-2]))
