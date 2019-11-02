@@ -19,8 +19,8 @@ def plot_epoch_loss_by_log(logs, save_dir, title):
     plt.ylabel('Loss')
     left = max(0, len(log_1st) - 200)
     right = max(200, len(log_1st))
-    top = max(max(log_1st[left:right]), max(log_2nd[left:right]), 1)
-    down = min(min(log_1st[left:right]), min(log_2nd[left:right]), 0.5)
+    top = max(max(log_1st[left:right]), max(log_2nd[left:right]))
+    down = min(min(log_1st[left:right]), min(log_2nd[left:right]))
     bound = (top - down) * 0.1
     plt.xlim(left=left, right=right)
     plt.ylim(down-bound, top+bound)

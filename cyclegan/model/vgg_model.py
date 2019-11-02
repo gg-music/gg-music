@@ -19,29 +19,25 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
 
     conv1 = Conv2D(512, (4, 1), strides=1, padding='same',
                    kernel_initializer=initializer)(vgg16.layers[-2].output)
+
     conv2 = Conv2D(512, (4, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv1)
     conv3 = Conv2D(512, (4, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv2)
-    drop3 = Dropout(0.1)(conv3)
 
     conv4 = Conv2D(512, (4, 1), strides=1, activation='relu',
-                   kernel_initializer=initializer)(drop3)
+                   kernel_initializer=initializer)(conv3)
     conv5 = Conv2D(512, (4, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv4)
-    conv6 = Conv2D(512, (4, 1), strides=1,
-                   kernel_initializer=initializer)(conv5)
-    drop6 = Dropout(0.1)(conv6)
 
     if norm_type.lower() == 'batchnorm':
-        norm1 = BatchNormalization()(drop6)
+        norm1 = BatchNormalization()(conv5)
     elif norm_type.lower() == 'instancenorm':
-        norm1 = InstanceNormalization()(drop6)
+        norm1 = InstanceNormalization()(conv5)
 
     leaky_relu = LeakyReLU()(norm1)
 
-    last = tf.keras.layers.Conv2D(
-        1, 4, strides=1, padding='same',
+    last = tf.keras.layers.Conv2D(1, (4, 1), strides=1,
         kernel_initializer=initializer)(leaky_relu)
 
     if target:

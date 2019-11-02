@@ -20,8 +20,11 @@ for example_x in x_test_dataset:
     example_x = tf.train.Example.FromString(example_x.numpy())
     test_x = extract_example(example_x)
     print(test_x['data'].shape)
+
     plot_heat_map(test_x['data'],title='real_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
     fake_x = generator_g(test_x['data'])
     plot_heat_map(fake_x, title='fake_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
-    disc = discriminator_x(test_x['data'])
-    plot_heat_map(disc, title='disc', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    disc_real_x = discriminator_x(test_x['data'])
+    plot_heat_map(disc_real_x, title='disc_real_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    disc_fake_x = discriminator_x(fake_x)
+    plot_heat_map(disc_fake_x, title='disc_fake_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
