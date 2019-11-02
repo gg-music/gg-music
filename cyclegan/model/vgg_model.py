@@ -24,16 +24,17 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
                    kernel_initializer=initializer)(conv1)
     conv3 = Conv2D(512, (4, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv2)
-
+    drop1 = Dropout(0.1)(conv3)
     conv4 = Conv2D(512, (4, 1), strides=1, activation='relu',
-                   kernel_initializer=initializer)(conv3)
+                   kernel_initializer=initializer)(drop1)
     conv5 = Conv2D(512, (4, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv4)
+    drop2 = Dropout(0.1)(conv5)
 
     if norm_type.lower() == 'batchnorm':
-        norm1 = BatchNormalization()(conv5)
+        norm1 = BatchNormalization()(drop2)
     elif norm_type.lower() == 'instancenorm':
-        norm1 = InstanceNormalization()(conv5)
+        norm1 = InstanceNormalization()(drop2)
 
     leaky_relu = LeakyReLU()(norm1)
 
