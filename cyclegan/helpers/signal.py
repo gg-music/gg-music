@@ -1,7 +1,6 @@
 import librosa
 import numpy as np
 
-from cyclegan.settings import PAD_SIZE, DEFAULT_SAMPLING_RATE
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -61,9 +60,9 @@ def inverse_stft(mag, phase, nfft=1024, normalize=True, crop_hf=True):
 
 def to_cqt(audio, nfft=1024, normalize=True):
     window = np.hanning(int(nfft))
-    S = librosa.cqt(audio, n_bins=512, bins_per_octave=12*8,
-                    hop_length=int(nfft/2),
-                    fmin=librosa.note_to_hz('A2'))
+    S = librosa.cqt(audio, n_bins=512, bins_per_octave=12 * 6,
+                    hop_length=int(nfft / 2**3),
+                    fmin=librosa.note_to_hz('A0'))
     mag, phase = np.abs(S), np.angle(S)
     if normalize:
         mag = 2 * mag / np.sum(window)
@@ -73,11 +72,11 @@ def to_cqt(audio, nfft=1024, normalize=True):
 def inverse_cqt(mag, phase, nfft=1024, normalize=True):
     window = np.hanning(int(nfft))
     if normalize:
-        mag = mag * np.sum(np.hanning(nfft)) / 2
+        mag = mag * np.sum(window) / 2
     R = mag * np.exp(1j * phase)
-    audio = librosa.icqt(R, hop_length=int(nfft/2),
-                         bins_per_octave=12*8,
-                         fmin=librosa.note_to_hz('A2'))
+    audio = librosa.icqt(R, hop_length=int(nfft / 2**3),
+                         bins_per_octave=12 * 6,
+                         fmin=librosa.note_to_hz('A0'))
     return audio
 
 
@@ -110,16 +109,19 @@ def write_audio(filename, audio, sr=DEFAULT_SAMPLING_RATE):
     librosa.output.write_wav(filename, audio, sr, norm=True)
 
 
-def unet_padding_size(length, pool_size, layers=4):
-    output = length
-    for _ in range(layers):
-        output = int(np.ceil(output / pool_size))
+def unet_pad_size(shape, pool_size=2, layers=5):
+    pad_size = []
+    for length in shape:
+        output = length
+        for _ in range(layers):
+            output = int(np.ceil(output / pool_size))
 
-    padding = output * (pool_size ** layers) - length
-    lpad = int(np.ceil(padding / 2))
-    rpad = int(np.floor(padding / 2))
+        padding = output * (pool_size ** layers) - length
+        lpad = int(np.ceil(padding / 2))
+        rpad = int(np.floor(padding / 2))
+        pad_size.append([lpad, rpad])
 
-    return lpad, rpad
+    return pad_size
 
 
 def crop(image, crop_size):
@@ -131,12 +133,9 @@ def crop(image, crop_size):
     return image
 
 
-def preprocessing_fn(file_path,
-                     spec_format,
-                     trim=None,
-                     split=None,
-                     convert_db=True,
-                     pad_size=PAD_SIZE):
+def preprocessing_fn(file_path, spec_format, chan=3,
+                     trim=None, split=None, convert_db=True):
+    spec_types = {'stft': to_stft, 'cqt': to_cqt}
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
@@ -146,7 +145,7 @@ def preprocessing_fn(file_path,
     if split:
         signal = splitsongs(signal, window=split)
 
-    mag, phase = spec_format(signal)
+    mag, phase = spec_types[spec_format](signal)
 
     if np.max(mag) == 0:
         raise ValueError
@@ -155,8 +154,22 @@ def preprocessing_fn(file_path,
         mag = amplitude_to_db(mag)
         mag = (mag * 2) - 1
 
-    if pad_size:
-        mag = np.pad(mag, pad_size)
-        mag = np.repeat(mag[:, :, np.newaxis], 3, axis=2)
+    pad_size = unet_pad_size(mag.shape)
+
+    mag = np.pad(mag, pad_size)
+    mag = np.repeat(mag[:, :, np.newaxis], chan, axis=2)
 
     return mag, phase
+
+
+def inverse_processing_fn(mag, phase, spec_format, convert_db=True):
+    inverse_type = {'stft': inverse_stft, 'cqt': inverse_cqt}
+
+    if convert_db:
+        mag = (mag + 1) / 2
+        mag = db_to_amplitude(mag)
+
+    mag = join_magnitude_slices(mag, target_shape=phase.shape)
+    audio_out = inverse_type[spec_format](mag, phase)
+
+    return audio_out

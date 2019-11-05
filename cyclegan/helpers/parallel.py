@@ -45,6 +45,7 @@ def batch_processing(batch_file_path,
                      spec_format,
                      to_tfrecord=False,
                      **kwargs):
+
     for file_path in batch_file_path:
         batch_specs = []
         try:
@@ -62,6 +63,7 @@ def batch_processing(batch_file_path,
 
         file_name = os.path.basename(file_path).split('.')[-2]
         category = os.path.dirname(file_path).split('/')[-1]
+        category = f'{category}_{spec_format}'
         category_dir = os.path.join(output_dir, category)
 
         make_dirs(category_dir)
@@ -76,7 +78,7 @@ def output2raw(category_dir, file_name, batch_specs):
     save_file = os.path.join(category_dir, '{}.npy'.format(file_name))
     np.save(save_file, batch_specs)
 
-    print(f'{save_file}')
+    print(save_file)
 
 
 def output2tfrecord(category_dir, file_name, batch_specs):
@@ -89,4 +91,4 @@ def output2tfrecord(category_dir, file_name, batch_specs):
             tf_example = np_array_to_example(batch_specs, save_file)
             writer.write(tf_example)
 
-    print(f'{save_file}')
+    print(save_file)

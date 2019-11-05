@@ -2,7 +2,7 @@
 
 * preprocessing
 ```sh
-python -m cyclegan.preprocessing -s <src root path> [-b <batch size, default=10>] [-tf]
+python -m cyclegan.preprocessing -s <src root path> [-sp <spectrum, defult=stft>] [-b <batch size, default=10>] [-tf]
 ```
 wav的資料夾結構為
 ```

@@ -41,9 +41,9 @@ x_list = get_file_list(x_rawset_path)
 y_list = get_file_list(y_rawset_path)
 
 x_train_dataset = tf.data.TFRecordDataset(
-    x_list[:STEPS]).prefetch(buffer_size=100)
+    x_list[:STEPS]).prefetch(buffer_size=100).shuffle(buffer_size=100)
 y_train_dataset = tf.data.TFRecordDataset(
-    y_list[:STEPS]).prefetch(buffer_size=100)
+    y_list[:STEPS]).prefetch(buffer_size=100).shuffle(buffer_size=100)
 
 x_test_dataset = tf.data.TFRecordDataset(x_list[STEPS])
 y_test_dataset = tf.data.TFRecordDataset(y_list[STEPS])

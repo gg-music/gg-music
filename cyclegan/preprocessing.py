@@ -5,8 +5,6 @@ from .helpers.parallel import batch_processing, processing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from .settings import RAWDATA_ROOT_PATH
 from .helpers.utils import get_file_list
-from .helpers.signal import to_stft, to_cqt
-from .helpers.plot import plot_heat_map, plot_epoch_loss
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
@@ -21,6 +19,12 @@ if __name__ == '__main__':
                     default=10,
                     help='files per batch',
                     type=int)
+    ap.add_argument('-sp',
+                    '--spectrum',
+                    required=False,
+                    default='stft',
+                    help='spectrum type: stft, cqt',
+                    type=str)
     ap.add_argument('-tf',
                     '--tfrecord',
                     required=False,
@@ -30,18 +34,20 @@ if __name__ == '__main__':
 
     args = ap.parse_args()
 
+
+
     if not os.path.isdir(args.src_path):
         raise FileNotFoundError('Invalid src path')
 
     file_list = get_file_list(args.src_path)
 
-    dst = 'gan_preprocessing/npy'
+    destination = 'gan_preprocessing/npy'
     if args.tfrecord:
-        dst = 'gan_preprocessing/tfrecords'
+        destination = 'gan_preprocessing/tfrecords'
 
     par = partial(batch_processing,
-                  output_dir=os.path.join(RAWDATA_ROOT_PATH, dst),
-                  spec_format=to_stft,
+                  output_dir=os.path.join(RAWDATA_ROOT_PATH, destination),
+                  spec_format=args.spectrum,
                   to_tfrecord=args.tfrecord)
 
     processing(file_list, par, args.batch_size)

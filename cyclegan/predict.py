@@ -1,26 +1,23 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
 from .helpers.utils import make_dirs, get_file_list, check_rawdata_exists
-from .helpers.signal import (preprocessing_fn, to_stft, crop,
-                             join_magnitude_slices, db_to_amplitude,
-                             inverse_stft, write_audio)
-from .settings import (DEFAULT_SAMPLING_RATE, PAD_SIZE, MODEL_ROOT_PATH,
+from .helpers.signal import (preprocessing_fn, inverse_processing_fn, write_audio)
+
+from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
                        WAVS_TO_PREDICT_ROOT_PATH)
 from random import shuffle
 
 
-def predict(model, input_filename, output_filename):
-    mag, phase = preprocessing_fn(input_filename, spec_format=to_stft, trim=5.9)
-    mag = mag[np.newaxis, :]
-    prediction = model.predict(mag)
-    prediction = (prediction + 1) / 2
+def predict(model, spec_format, input_filename, output_filename):
 
-    mag = crop(prediction, PAD_SIZE)
-    mag = join_magnitude_slices(mag, target_shape=phase.shape)
-    mag = db_to_amplitude(mag)
-    audio_out = inverse_stft(mag, phase)
+    mag, phase = preprocessing_fn(input_filename, spec_format)
+    mag = mag[np.newaxis, :]
+
+    mag = model.predict(mag)
+    audio_out = inverse_processing_fn(mag, phase, spec_format)
 
     make_dirs(os.path.dirname(output_filename))
     write_audio(output_filename, audio_out, DEFAULT_SAMPLING_RATE)
@@ -28,21 +25,9 @@ def predict(model, input_filename, output_filename):
 
 def load_model(model_path, n_epoch):
     import tensorflow as tf
-    from .model_settings import (generator_g, generator_f, discriminator_x,
-                                 discriminator_y, generator_g_optimizer,
-                                 generator_f_optimizer,
-                                 discriminator_x_optimizer,
-                                 discriminator_y_optimizer)
+    from .model_settings import generator_g, generator_f
 
-    ckpt = tf.train.Checkpoint(
-        generator_g=generator_g,
-        generator_f=generator_f,
-        discriminator_x=discriminator_x,
-        discriminator_y=discriminator_y,
-        generator_g_optimizer=generator_g_optimizer,
-        generator_f_optimizer=generator_f_optimizer,
-        discriminator_x_optimizer=discriminator_x_optimizer,
-        discriminator_y_optimizer=discriminator_y_optimizer)
+    ckpt = tf.train.Checkpoint(generator_g=generator_g, generator_f=generator_f)
 
     ckpt_manager = tf.train.CheckpointManager(ckpt, model_path, max_to_keep=100)
     last_epoch = len(ckpt_manager.checkpoints)
@@ -65,6 +50,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True)
     ap.add_argument('-e', '--epoch', required=False, type=int)
+    ap.add_argument('-sp',
+                    '--spectrum',
+                    required=False,
+                    default='stft',
+                    help='spectrum type: stft, cqt',
+                    type=str)
     ap.add_argument('-x', required=True, help='convert from', type=str)
     ap.add_argument('-y', required=True, help='convert to', type=str)
     ap.add_argument('-n',
@@ -97,8 +88,8 @@ if __name__ == "__main__":
         for wav in wavs:
             output_file = os.path.join(
                 SAVE_WAV_PATH, args.model + "-" +
-                os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
-                os.path.basename(wav))
+                               os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
+                               os.path.basename(wav))
 
-            predict(models[model], wav, output_file)
+            predict(models[model], args.spectrum, wav, output_file)
             print('Prediction saved in', output_file)
