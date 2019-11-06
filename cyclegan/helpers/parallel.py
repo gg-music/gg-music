@@ -43,6 +43,7 @@ def batch_plot(batch_file_path, output_dir):
 def batch_processing(batch_file_path,
                      output_dir,
                      spec_format,
+                     folder_suffix,
                      to_tfrecord=False,
                      **kwargs):
 
@@ -63,7 +64,7 @@ def batch_processing(batch_file_path,
 
         file_name = os.path.basename(file_path).split('.')[-2]
         category = os.path.dirname(file_path).split('/')[-1]
-        category = f'{category}_{spec_format}'
+        category = f'{category}_{folder_suffix}'
         category_dir = os.path.join(output_dir, category)
 
         make_dirs(category_dir)
