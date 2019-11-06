@@ -163,7 +163,7 @@ def preprocessing_fn(file_path, spec_format, chan=3,
     return mag, phase
 
 
-def inverse_fn(mag, phase, spec_format, convert_db=True):
+def inverse_fn(mag, phase, spec_format, convert_db=True, trim=True):
     inverse_type = {0: inverse_stft, 1: inverse_cqt}
 
     if convert_db:
@@ -172,5 +172,8 @@ def inverse_fn(mag, phase, spec_format, convert_db=True):
 
     mag = join_magnitude_slices(mag, target_shape=phase.shape)
     audio_out = inverse_type[spec_format](mag, phase)
+    if trim:
+        # trim start/end burst artifact
+        audio_out = audio_out[2000:-2000]
 
     return audio_out
