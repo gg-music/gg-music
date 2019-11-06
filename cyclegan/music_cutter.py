@@ -26,8 +26,9 @@ except Exception as e:
     raise e
 
 spilit_time = args.seconds * 1000
-folder_name = args.input.split('/')[-1][
-    0:-4] if not args.suffix else args.input.split('/')[-1][0:-4] + '_' + suffix
+folder_name = args.input.split(
+    '/')[-1][0:-4] if not args.suffix else args.input.split(
+        '/')[-1][0:-4] + '_' + args.suffix
 
 output_dir = f'/home/gtzan/data/gan_preprocessing/wav/{folder_name}'
 
