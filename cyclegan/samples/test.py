@@ -5,7 +5,7 @@ from cyclegan.helpers.plot import plot_heat_map
 from cyclegan.helpers.example_protocol import extract_example
 import tensorflow as tf
 
-inp = '/home/gtzan/data/gan_preprocessing/tfrecords/cello/cello-0067.tfrecords'
+inp = '/home/gtzan/data/gan_preprocessing/tfrecords/cello_cqt/cello-0067.tfrecords'
 x_test_dataset = tf.data.TFRecordDataset(inp)
 
 generator_g = Generator(backbone_name='vgg16',
@@ -21,10 +21,10 @@ for example_x in x_test_dataset:
     test_x = extract_example(example_x)
     print(test_x['data'].shape)
 
-    plot_heat_map(test_x['data'],title='real_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    plot_heat_map(test_x['data'],title='real_x', save_dir='/home/gtzan/ssd/test')
     fake_x = generator_g(test_x['data'])
-    plot_heat_map(fake_x, title='fake_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    plot_heat_map(fake_x, title='fake_x', save_dir='/home/gtzan/ssd/test')
     disc_real_x = discriminator_x(test_x['data'])
-    plot_heat_map(disc_real_x, title='disc_real_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    plot_heat_map(disc_real_x, title='disc_real_x', save_dir='/home/gtzan/ssd/test')
     disc_fake_x = discriminator_x(fake_x)
-    plot_heat_map(disc_fake_x, title='disc_fake_x', save_dir='/home/gtzan/models/jimmy_old/cyclegan')
+    plot_heat_map(disc_fake_x, title='disc_fake_x', save_dir='/home/gtzan/ssd/test')

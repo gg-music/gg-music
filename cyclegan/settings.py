@@ -7,5 +7,5 @@ DROPOUT_RATE = 0.5
 BN_AXIS = 3
 STEPS = 3000
 WAVS_TO_PREDICT_ROOT_PATH = RAWDATA_ROOT_PATH + '/gan_preprocessing/wav'
-# trim_cqt=2.97
+# trim_cqt=1.484
 # trim_stft=5.9

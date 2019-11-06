@@ -17,17 +17,17 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
     vgg16 = VGG16(include_top=False, weights='imagenet',
                   input_tensor=x)
 
-    conv1 = Conv2D(512, (4, 1), strides=1, padding='same',
+    conv1 = Conv2D(512, (8, 1), strides=1, padding='same',
                    kernel_initializer=initializer)(vgg16.layers[-2].output)
 
-    conv2 = Conv2D(512, (4, 1), strides=1, activation='relu',
+    conv2 = Conv2D(512, (8, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv1)
-    conv3 = Conv2D(512, (4, 1), strides=1, activation='relu',
+    conv3 = Conv2D(512, (8, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv2)
     drop1 = Dropout(0.1)(conv3)
-    conv4 = Conv2D(512, (4, 1), strides=1, activation='relu',
+    conv4 = Conv2D(512, (8, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(drop1)
-    conv5 = Conv2D(512, (4, 1), strides=1, activation='relu',
+    conv5 = Conv2D(512, (8, 1), strides=1, activation='relu',
                    kernel_initializer=initializer)(conv4)
     drop2 = Dropout(0.1)(conv5)
 
@@ -48,5 +48,5 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
 
 
 if __name__ == '__main__':
-    model = vgg16_model(input_shape=(256, 256, 3))
+    model = vgg16_model(input_shape=(512, 256, 3))
     model.summary()
