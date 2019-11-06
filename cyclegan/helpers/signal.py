@@ -59,6 +59,7 @@ def inverse_stft(mag, phase, nfft=1024, normalize=True, crop_hf=True):
 
 
 def to_cqt(audio, nfft=1024, normalize=True):
+    # A0(27.5Hz) -> B7(3951.066Hz)
     window = np.hanning(int(nfft))
     S = librosa.cqt(audio, n_bins=512, bins_per_octave=12 * 6,
                     hop_length=int(nfft / 2**3),
