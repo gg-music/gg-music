@@ -4,8 +4,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
 from .helpers.utils import make_dirs, get_file_list, check_rawdata_exists
-from .helpers.signal import (preprocessing_fn, inverse_processing_fn, write_audio)
-
+from .helpers.signal import (preprocessing_fn, inverse_fn, write_audio)
+from .helpers.plot import plot_heat_map
 from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
                        WAVS_TO_PREDICT_ROOT_PATH)
 from random import shuffle
@@ -16,8 +16,11 @@ def predict(model, spec_format, input_filename, output_filename):
     mag, phase = preprocessing_fn(input_filename, spec_format)
     mag = mag[np.newaxis, :]
 
+    plot_heat_map(mag, 'input', save_dir='/home/gtzan/ssd/test')
     mag = model.predict(mag)
-    audio_out = inverse_processing_fn(mag, phase, spec_format)
+    plot_heat_map(mag, 'output', save_dir='/home/gtzan/ssd/test')
+
+    audio_out = inverse_fn(mag, phase, spec_format)
 
     make_dirs(os.path.dirname(output_filename))
     write_audio(output_filename, audio_out, DEFAULT_SAMPLING_RATE)
@@ -50,12 +53,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True)
     ap.add_argument('-e', '--epoch', required=False, type=int)
-    ap.add_argument('-sp',
+    ap.add_argument('-cqt',
                     '--spectrum',
                     required=False,
-                    default='stft',
-                    help='spectrum type: stft, cqt',
-                    type=str)
+                    default=False,
+                    action='store_true',
+                    help='convert to cqt, default is stft')
     ap.add_argument('-x', required=True, help='convert from', type=str)
     ap.add_argument('-y', required=True, help='convert to', type=str)
     ap.add_argument('-n',

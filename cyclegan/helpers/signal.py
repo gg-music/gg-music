@@ -136,7 +136,7 @@ def crop(image, crop_size):
 
 def preprocessing_fn(file_path, spec_format, chan=3,
                      trim=None, split=None, convert_db=True):
-    spec_types = {'stft': to_stft, 'cqt': to_cqt}
+    spec_types = {0: to_stft, 1: to_cqt}
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
@@ -163,8 +163,8 @@ def preprocessing_fn(file_path, spec_format, chan=3,
     return mag, phase
 
 
-def inverse_processing_fn(mag, phase, spec_format, convert_db=True):
-    inverse_type = {'stft': inverse_stft, 'cqt': inverse_cqt}
+def inverse_fn(mag, phase, spec_format, convert_db=True):
+    inverse_type = {0: inverse_stft, 1: inverse_cqt}
 
     if convert_db:
         mag = (mag + 1) / 2

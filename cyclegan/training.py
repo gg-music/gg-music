@@ -5,10 +5,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import tensorflow as tf
 from tqdm import tqdm
+import numpy as np
 
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
+from .helpers.signal import preprocessing_fn
 from .model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
@@ -20,6 +22,14 @@ ap.add_argument('-m',
                 type=str)
 ap.add_argument('-x', required=True, help='convert from', type=str)
 ap.add_argument('-y', required=True, help='convert to', type=str)
+ap.add_argument('-tx', required=False, help='x_test wav', type=str)
+ap.add_argument('-ty', required=False, help='y_test_wav', type=str)
+ap.add_argument('-cqt',
+                '--spectrum',
+                required=False,
+                default=False,
+                action='store_true',
+                help='convert to cqt, default is stft')
 args = ap.parse_args()
 
 x_rawset_path = os.path.join(RAWSET_PATH, args.x)
@@ -45,21 +55,29 @@ x_train_dataset = tf.data.TFRecordDataset(
 y_train_dataset = tf.data.TFRecordDataset(
     y_list[:STEPS]).prefetch(buffer_size=100).shuffle(buffer_size=100)
 
-x_test_dataset = tf.data.TFRecordDataset(x_list[STEPS])
-y_test_dataset = tf.data.TFRecordDataset(y_list[STEPS])
+if args.tx and args.ty:
+    tx = args.tx
+    ty = args.ty
+else:
+    tx = args.x
+    ty = args.y
 
-for example_x, example_y in \
-    tf.data.Dataset.zip((x_test_dataset, y_test_dataset)):
-    example_x = tf.train.Example.FromString(example_x.numpy())
-    example_y = tf.train.Example.FromString(example_y.numpy())
-    test_x = extract_example(example_x)
-    test_y = extract_example(example_y)
-    save_heatmap_npy(test_x['data'],
-                     '{}_reference'.format(x_instrument),
-                     save_dir=os.path.join(SAVE_DB_PATH, 'fake_y'))
-    save_heatmap_npy(test_y['data'],
-                     '{}_reference'.format(y_instrument),
-                     save_dir=os.path.join(SAVE_DB_PATH, 'fake_x'))
+x_test_path = os.path.join(os.path.dirname(RAWSET_PATH), 'wav', tx)
+y_test_path = os.path.join(os.path.dirname(RAWSET_PATH), 'wav', ty)
+
+x_test = get_file_list(x_test_path)[0]
+y_test = get_file_list(y_test_path)[0]
+
+test_x, _ = preprocessing_fn(x_test, args.spectrum)
+test_y, _ = preprocessing_fn(y_test, args.spectrum)
+
+test_x = test_x[np.newaxis, :]
+test_y = test_y[np.newaxis, :]
+
+save_heatmap_npy(test_x, '{}_reference'.format(x_instrument),
+                 save_dir=os.path.join(SAVE_DB_PATH, 'fake_y'))
+save_heatmap_npy(test_y, '{}_reference'.format(y_instrument),
+                 save_dir=os.path.join(SAVE_DB_PATH, 'fake_x'))
 
 ckpt = tf.train.Checkpoint(generator_g=generator_g,
                            generator_f=generator_f,
@@ -111,12 +129,12 @@ for epoch in range(start, EPOCHS):
 
         if n % 10 == 0:
             # generate fake
-            fake_y = generator_g(test_x['data'])
+            fake_y = generator_g(test_x)
             save_heatmap_npy(
                 fake_y,
                 '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'fake_y'))
-            fake_x = generator_f(test_y['data'])
+            fake_x = generator_f(test_y)
             save_heatmap_npy(
                 fake_x,
                 '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
@@ -136,13 +154,13 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
-            disc_real_y = discriminator_y(test_y['data'])
+            disc_real_y = discriminator_y(test_y)
             save_heatmap_npy(
                 disc_real_y,
                 'disc_real_y_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
-            disc_real_x = discriminator_x(test_x['data'])
+            disc_real_x = discriminator_x(test_x)
             save_heatmap_npy(
                 disc_real_x,
                 'disc_real_x_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
