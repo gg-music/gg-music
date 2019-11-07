@@ -1,6 +1,6 @@
 from cyclegan.segmentation_models.nestnet import Nestnet as Generator
 from cyclegan.model.vgg_model import vgg16_model as Discriminator
-# from cyclegan.model.pix2pix import discriminator as Discriminator
+
 from cyclegan.helpers.plot import plot_heat_map
 from cyclegan.helpers.example_protocol import extract_example
 import tensorflow as tf

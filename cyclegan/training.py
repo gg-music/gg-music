@@ -88,7 +88,7 @@ ckpt = tf.train.Checkpoint(generator_g=generator_g,
 
 ckpt_manager = tf.train.CheckpointManager(ckpt,
                                           SAVE_MODEL_PATH,
-                                          max_to_keep=100)
+                                          max_to_keep=1000)
 
 if ckpt_manager.latest_checkpoint:
     ckpt.restore(ckpt_manager.latest_checkpoint)
@@ -125,7 +125,7 @@ for epoch in range(start, EPOCHS):
         loss_history['Discriminator']['x'].append(xD.numpy())
         loss_history['Discriminator']['y'].append(yD.numpy())
 
-        if n % 10 == 0:
+        if n % 50 == 0:
             # generate fake
             fake_y = generator_g(test_x)
             save_heatmap_npy(
@@ -170,10 +170,11 @@ for epoch in range(start, EPOCHS):
             save_loss_log(loss_history['Discriminator'], SAVE_D_LOSS_PATH, n,
                           epoch + 1)
 
+        if n % 1000 == 0:
+            ckpt_save_path = ckpt_manager.save()
+            print('Saving checkpoint for epoch {} steps {} at {}'.format(epoch + 1, n, ckpt_save_path))
+
         n += 1
-    ckpt_save_path = ckpt_manager.save()
-    print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
-                                                        ckpt_save_path))
 
     print('Time taken for epoch {} is {} sec\n'.format(epoch + 1,
                                                        time.time() - start))
