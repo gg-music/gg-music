@@ -30,7 +30,8 @@ def load_model(model_path, n_epoch):
     import tensorflow as tf
     from .model_settings import generator_g, generator_f
 
-    ckpt = tf.train.Checkpoint(generator_g=generator_g, generator_f=generator_f)
+    ckpt = tf.train.Checkpoint(generator_g=generator_g,
+                               generator_f=generator_f).expect_partial()
 
     ckpt_manager = tf.train.CheckpointManager(ckpt, model_path, max_to_keep=100)
     last_epoch = len(ckpt_manager.checkpoints)
