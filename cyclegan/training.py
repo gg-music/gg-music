@@ -50,10 +50,8 @@ x_instrument, y_instrument = args.x, args.y
 x_list = get_file_list(x_rawset_path)
 y_list = get_file_list(y_rawset_path)
 
-x_train_dataset = tf.data.TFRecordDataset(
-    x_list[:STEPS]).prefetch(buffer_size=100).shuffle(buffer_size=100)
-y_train_dataset = tf.data.TFRecordDataset(
-    y_list[:STEPS]).prefetch(buffer_size=100).shuffle(buffer_size=100)
+x_train_dataset = tf.data.TFRecordDataset(x_list[:STEPS]).prefetch(buffer_size=200)
+y_train_dataset = tf.data.TFRecordDataset(y_list[:STEPS]).prefetch(buffer_size=200)
 
 if args.tx and args.ty:
     tx = args.tx
@@ -132,38 +130,38 @@ for epoch in range(start, EPOCHS):
             fake_y = generator_g(test_x)
             save_heatmap_npy(
                 fake_y,
-                '{}_epoch{:0>2}_step{:0>4}'.format(x_instrument, epoch + 1, n),
+                '{}_epoch{:0>2}_step{:0>5}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'fake_y'))
             fake_x = generator_f(test_y)
             save_heatmap_npy(
                 fake_x,
-                '{}_epoch{:0>2}_step{:0>4}'.format(y_instrument, epoch + 1, n),
+                '{}_epoch{:0>2}_step{:0>5}'.format(y_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'fake_x'))
 
             # disc fake
             disc_fake_y = discriminator_y(fake_y)
             save_heatmap_npy(
                 disc_fake_y,
-                'disc_fake_y_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                'disc_fake_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_y'))
 
             disc_fake_x = discriminator_x(fake_x)
             save_heatmap_npy(
                 disc_fake_x,
-                'disc_fake_x_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                'disc_fake_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
             disc_real_y = discriminator_y(test_y)
             save_heatmap_npy(
                 disc_real_y,
-                'disc_real_y_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                'disc_real_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
             disc_real_x = discriminator_x(test_x)
             save_heatmap_npy(
                 disc_real_x,
-                'disc_real_x_epoch{:0>2}_step{:0>4}'.format(epoch + 1, n),
+                'disc_real_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_x'))
 
             # save loss
