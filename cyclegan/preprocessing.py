@@ -41,12 +41,9 @@ if __name__ == '__main__':
 
     destination = 'gan_preprocessing/tfrecords' if args.tfrecord else 'gan_preprocessing/npy'
 
-    folder_suffix = 'cqt' if args.spectrum else 'stft'
-
     par = partial(batch_processing,
                   output_dir=os.path.join(RAWDATA_ROOT_PATH, destination),
                   spec_format=args.spectrum,
-                  folder_suffix=folder_suffix,
                   to_tfrecord=args.tfrecord)
 
     processing(file_list, par, args.batch_size)
