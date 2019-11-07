@@ -9,7 +9,7 @@ def save_loss_log(hist, save_dir, n_steps, n_epoch):
     """
     model_type = os.path.basename(save_dir).split('_')[-2]
     for npy in hist.values():
-        filename = f'{model_type}_epoch{n_epoch:02}_{n_steps:04}-loss.log'
+        filename = f'{model_type}_epoch{n_epoch:02}_{n_steps:05}-loss.log'
 
         with open(os.path.join(save_dir, filename), 'a') as fp:
             for n in npy:
