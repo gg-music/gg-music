@@ -1,6 +1,9 @@
 import librosa
 import numpy as np
+import tensorflow as tf
+import tensorflow_probability as tfp
 
+from cyclegan.settings import DEFAULT_SAMPLING_RATE
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -62,7 +65,7 @@ def to_cqt(audio, nfft=1024, normalize=True):
     # A0(27.5Hz) -> B7(3951.066Hz)
     window = np.hanning(int(nfft))
     S = librosa.cqt(audio, n_bins=512, bins_per_octave=12 * 6,
-                    hop_length=int(nfft / 2**3),
+                    hop_length=int(nfft / 2 ** 3),
                     fmin=librosa.note_to_hz('A0'))
     mag, phase = np.abs(S), np.angle(S)
     if normalize:
@@ -75,7 +78,7 @@ def inverse_cqt(mag, phase, nfft=1024, normalize=True):
     if normalize:
         mag = mag * np.sum(window) / 2
     R = mag * np.exp(1j * phase)
-    audio = librosa.icqt(R, hop_length=int(nfft / 2**3),
+    audio = librosa.icqt(R, hop_length=int(nfft / 2 ** 3),
                          bins_per_octave=12 * 6,
                          fmin=librosa.note_to_hz('A0'))
     return audio
@@ -177,3 +180,26 @@ def inverse_fn(mag, phase, spec_format, convert_db=True, trim=True):
         audio_out = audio_out[2000:-2000]
 
     return audio_out
+
+
+def log_fq(spec, nfft=1024, sr=DEFAULT_SAMPLING_RATE):
+    y_ref = tf.transpose(spec[0, :, :, 0])
+
+    nyquest = sr / 2
+    low_fq = nyquest / (1 + nfft / 2)
+    high_fq = y_ref.shape[1] * nyquest / (1 + nfft / 2)
+
+    exp_fq = tf.exp(tf.linspace(tf.math.log(low_fq), tf.math.log(high_fq), y_ref.shape[1]))
+
+    y = tfp.math.batch_interp_regular_1d_grid(
+        exp_fq,
+        x_ref_min=low_fq,
+        x_ref_max=high_fq,
+        y_ref=y_ref,
+        axis=1)
+    y = tf.transpose(y)
+
+    log_spec = tf.stack([y for i in range(3)], axis=-1)
+    log_spec = log_spec[tf.newaxis, :, :, :]
+
+    return log_spec

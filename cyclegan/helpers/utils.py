@@ -17,4 +17,4 @@ def make_dirs(path):
 
 def check_rawdata_exists(path_x, path_y):
     if any((not os.path.isdir(path_x), not os.path.isdir(path_y))):
-        raise FileNotFoundError('any of input instrument not exists')
+        raise FileNotFoundError("input instrument pair does not exists")
