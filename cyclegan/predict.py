@@ -16,9 +16,7 @@ def predict(model, spec_format, input_filename, output_filename):
     mag, phase = preprocessing_fn(input_filename, spec_format)
     mag = mag[np.newaxis, :]
 
-    plot_heat_map(mag, 'input', save_dir='/home/gtzan/ssd/test')
     mag = model.predict(mag)
-    plot_heat_map(mag, 'output', save_dir='/home/gtzan/ssd/test')
 
     audio_out = inverse_fn(mag, phase, spec_format)
 
