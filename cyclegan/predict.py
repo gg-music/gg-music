@@ -11,24 +11,17 @@ from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
 from random import shuffle
 
 
-def predict(inp, out, spec_format, model=None):
+def predict(inp, out, spec_format, model):
     mag, phase = preprocessing_fn(inp, spec_format)
     mag = mag[np.newaxis, :]
+    ori = inverse_fn(mag, phase, spec_format)
 
-    if model:
-        mag = model.predict(mag)
+    mag = model.predict(mag)
+    pred = inverse_fn(mag, phase, spec_format)
 
-    audio_out = inverse_fn(mag, phase, spec_format)
+    audio_out = np.append(ori, pred)
     make_dirs(os.path.dirname(out))
     write_audio(out, audio_out, DEFAULT_SAMPLING_RATE)
-
-
-def transform_sample(spec_format, input_filename, output_filename):
-    mag, phase = preprocessing_fn(input_filename, spec_format)
-    mag = mag[np.newaxis, :]
-    audio_out = inverse_fn(mag, phase, spec_format)
-    make_dirs(os.path.dirname(output_filename))
-    write_audio(output_filename, audio_out, DEFAULT_SAMPLING_RATE)
 
 
 def load_model(model_path, n_epoch):
@@ -100,8 +93,4 @@ if __name__ == "__main__":
                                        wave_basename)
 
             predict(wav, output_file, args.spectrum, models[model])
-
-            sample_output = os.path.join(SAVE_WAV_PATH, f'sample_{wave_basename}')
-            predict(wav, sample_output, args.spectrum, model=None)
-
             print('Prediction saved in', output_file)

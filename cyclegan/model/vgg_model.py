@@ -21,19 +21,18 @@ def vgg16_model(input_shape=(None, None, 3), norm_type='batchnorm', target=False
                    kernel_initializer=initializer)(vgg16.layers[-2].output)
     conv2 = Conv2D(512, (4, 1), strides=1, padding='same', activation='relu',
                    kernel_initializer=initializer)(conv1)
-    drop1 = Dropout(0.1)(conv2)
-    pool1 = MaxPool2D((2, 1))(drop1)
+    pool1 = MaxPool2D((2, 1))(conv2)
 
     conv3 = Conv2D(512, (4, 1), strides=1, padding='same', activation='relu',
                    kernel_initializer=initializer)(pool1)
     conv4 = Conv2D(512, (4, 1), strides=1, padding='same', activation='relu',
                    kernel_initializer=initializer)(conv3)
-    drop2 = Dropout(0.1)(conv4)
+    pool2 = MaxPool2D((2, 1))(conv4)
 
     if norm_type.lower() == 'batchnorm':
-        norm1 = BatchNormalization()(drop2)
+        norm1 = BatchNormalization()(pool2)
     elif norm_type.lower() == 'instancenorm':
-        norm1 = InstanceNormalization()(drop2)
+        norm1 = InstanceNormalization()(pool2)
 
     leaky_relu = LeakyReLU()(norm1)
 

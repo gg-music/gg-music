@@ -148,7 +148,7 @@ def preprocessing_fn(file_path, spec_format, chan=3,
     return mag, phase
 
 
-def inverse_fn(mag, phase, spec_format, convert_db=True, trim=True):
+def inverse_fn(mag, phase, spec_format, convert_db=True, trim=False):
     inverse_type = {0: inverse_stft, 1: inverse_cqt}
 
     if convert_db:
@@ -198,7 +198,7 @@ def mel_fq(mag, nfft=1024, convert_db=True, normalize=True, crop_hf=True):
     if crop_hf:
         mag = add_hf(mag, target_shape=(mag.shape[0]*2+1, mag.shape[1]))
 
-    S = librosa.feature.melspectrogram(S=mag, sr=DEFAULT_SAMPLING_RATE)
+    S = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
     mag = np.abs(S)
 
     window = np.hanning(int(nfft))

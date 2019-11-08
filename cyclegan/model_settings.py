@@ -78,10 +78,8 @@ def train_step(real_x, real_y, update='gd'):
                 real_x, cycled_x) + calc_cycle_loss(real_y, cycled_y)
 
             # Total generator loss = adversarial loss + cycle loss
-            total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss(
-                real_y, same_y) + differ_loss(real_x, fake_y)
-            total_gen_f_loss = gen_f_loss + total_cycle_loss + identity_loss(
-                real_x, same_x) + differ_loss(real_y, fake_x)
+            total_gen_g_loss = gen_g_loss + total_cycle_loss
+            total_gen_f_loss = gen_f_loss + total_cycle_loss
 
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)

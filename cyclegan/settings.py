@@ -1,7 +1,7 @@
 RAWSET_PATH = '/home/gtzan/data/gan_preprocessing/tfrecords'
 RAWDATA_ROOT_PATH = '/home/gtzan/data'
 MODEL_ROOT_PATH = '/home/gtzan/ssd/models'
-EPOCHS = 20
+EPOCHS = 10
 DEFAULT_SAMPLING_RATE = 22050
 DROPOUT_RATE = 0.5
 BN_AXIS = 3
