@@ -103,8 +103,8 @@ def unet_pad_size(shape, pool_size=2, layers=5):
             output = int(np.ceil(output / pool_size))
 
         padding = output * (pool_size ** layers) - length
-        lpad = int(np.ceil(padding / 2))
-        rpad = int(np.floor(padding / 2))
+        lpad = 0
+        rpad = int(padding)
         pad_size.append([lpad, rpad])
 
     return pad_size
@@ -148,7 +148,7 @@ def preprocessing_fn(file_path, spec_format, chan=3,
     return mag, phase
 
 
-def inverse_fn(mag, phase, spec_format, convert_db=True, trim=False):
+def inverse_fn(mag, phase, spec_format, convert_db=True, trim=True):
     inverse_type = {0: inverse_stft, 1: inverse_cqt}
 
     if convert_db:
@@ -159,7 +159,7 @@ def inverse_fn(mag, phase, spec_format, convert_db=True, trim=False):
     audio_out = inverse_type[spec_format](mag, phase)
     if trim:
         # trim start/end burst artifact
-        audio_out = audio_out[2000:-2000]
+        audio_out = audio_out[2205:-2205]
 
     return audio_out
 
