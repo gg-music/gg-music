@@ -2,8 +2,6 @@ import librosa
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
-
-from cyclegan.settings import DEFAULT_SAMPLING_RATE
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -19,14 +17,6 @@ def splitsongs(X, window=0.1, overlap=0.5):
         temp_X.append(s)
 
     return np.array(temp_X)
-
-
-def to_melspectrogram(songs, n_fft=1024, hop_length=512):
-    melspec = lambda x: librosa.feature.melspectrogram(
-        x, n_fft=n_fft, hop_length=hop_length)[:, :, np.newaxis]
-
-    tsongs = map(melspec, songs)
-    return np.array(list(tsongs))
 
 
 def add_hf(mag, target_shape):
@@ -82,14 +72,6 @@ def inverse_cqt(mag, phase, nfft=1024, normalize=True):
                          bins_per_octave=12 * 6,
                          fmin=librosa.note_to_hz('A0'))
     return audio
-
-
-def join_magnitude_slices(mag_sliced, target_shape):
-    mag = np.zeros((mag_sliced.shape[1], mag_sliced.shape[0] * mag_sliced.shape[2]))
-    for i in range(mag_sliced.shape[0]):
-        mag[:, (i) * mag_sliced.shape[2]:(i + 1) * mag_sliced.shape[2]] = mag_sliced[i, :, :, 0]
-    mag = mag[0:target_shape[0], 0:target_shape[1]]
-    return mag
 
 
 def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
@@ -173,7 +155,7 @@ def inverse_fn(mag, phase, spec_format, convert_db=True, trim=True):
         mag = (mag + 1) / 2
         mag = db_to_amplitude(mag)
 
-    mag = join_magnitude_slices(mag, target_shape=phase.shape)
+    mag = mag[0, :phase.shape[0], :phase.shape[1], 0]
     audio_out = inverse_type[spec_format](mag, phase)
     if trim:
         # trim start/end burst artifact
@@ -203,3 +185,30 @@ def log_fq(spec, nfft=1024, sr=DEFAULT_SAMPLING_RATE):
     log_spec = log_spec[tf.newaxis, :, :, :]
 
     return log_spec
+
+
+def mel_fq(mag, nfft=1024, convert_db=True, normalize=True, crop_hf=True):
+    mag = mag[0, :, :, 0]
+
+    if convert_db:
+        mag = (mag + 1) / 2
+        mag = db_to_amplitude(mag)
+    if normalize:
+        mag = mag * np.sum(np.hanning(nfft)) / 2
+    if crop_hf:
+        mag = add_hf(mag, target_shape=(mag.shape[0]*2+1, mag.shape[1]))
+
+    S = librosa.feature.melspectrogram(S=mag, sr=DEFAULT_SAMPLING_RATE)
+    mag = np.abs(S)
+
+    window = np.hanning(int(nfft))
+
+    if normalize:
+        mag = 2 * mag / np.sum(window)
+    if convert_db:
+        mag = amplitude_to_db(mag)
+        mag = (mag * 2) - 1
+
+    mel_spec = tf.stack([mag for i in range(3)], axis=-1)
+    mel_spec = mel_spec[tf.newaxis, :, :, :]
+    return mel_spec

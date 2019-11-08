@@ -19,12 +19,11 @@ if __name__ == '__main__':
                     default=10,
                     help='files per batch',
                     type=int)
-    ap.add_argument('-cqt',
+    ap.add_argument('-sp',
                     '--spectrum',
                     required=False,
-                    default=False,
-                    action='store_true',
-                    help='convert to cqt, default is stft')
+                    default=0,
+                    help='select spectrum: 0:stft, 1:cqt')
     ap.add_argument('-tf',
                     '--tfrecord',
                     required=False,

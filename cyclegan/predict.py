@@ -5,21 +5,28 @@ import argparse
 import numpy as np
 from .helpers.utils import make_dirs, get_file_list, check_rawdata_exists
 from .helpers.signal import (preprocessing_fn, inverse_fn, write_audio)
-from .helpers.plot import plot_heat_map
+
 from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
                        WAVS_TO_PREDICT_ROOT_PATH)
 from random import shuffle
 
 
-def predict(model, spec_format, input_filename, output_filename):
-
-    mag, phase = preprocessing_fn(input_filename, spec_format)
+def predict(inp, out, spec_format, model=None):
+    mag, phase = preprocessing_fn(inp, spec_format)
     mag = mag[np.newaxis, :]
 
-    mag = model.predict(mag)
+    if model:
+        mag = model.predict(mag)
 
     audio_out = inverse_fn(mag, phase, spec_format)
+    make_dirs(os.path.dirname(out))
+    write_audio(out, audio_out, DEFAULT_SAMPLING_RATE)
 
+
+def transform_sample(spec_format, input_filename, output_filename):
+    mag, phase = preprocessing_fn(input_filename, spec_format)
+    mag = mag[np.newaxis, :]
+    audio_out = inverse_fn(mag, phase, spec_format)
     make_dirs(os.path.dirname(output_filename))
     write_audio(output_filename, audio_out, DEFAULT_SAMPLING_RATE)
 
@@ -88,10 +95,14 @@ if __name__ == "__main__":
 
     for model, wavs in input_files.items():
         for wav in wavs:
-            output_file = os.path.join(
-                SAVE_WAV_PATH, args.model + "-" +
-                               os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
-                               os.path.basename(wav))
+            wave_basename = os.path.basename(wav)
+            output_file = os.path.join(SAVE_WAV_PATH, args.model + "-" +
+                                       os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
+                                       wave_basename)
 
-            predict(models[model], args.spectrum, wav, output_file)
+            predict(wav, output_file, args.spectrum, models[model])
+
+            sample_output = os.path.join(SAVE_WAV_PATH, f'sample_{wave_basename}')
+            predict(wav, sample_output, args.spectrum, model=None)
+
             print('Prediction saved in', output_file)
