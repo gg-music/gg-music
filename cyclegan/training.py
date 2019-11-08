@@ -9,7 +9,7 @@ from tqdm import tqdm
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
-from .helpers.signal import log_fq
+from .helpers.signal import mel_fq
 from .model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
@@ -118,26 +118,26 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_DB_PATH, 'fake_x'))
 
             # disc fake
-            disc_fake_y = discriminator_y(log_fq(fake_y))
+            disc_fake_y = discriminator_y(mel_fq(fake_y))
             save_heatmap_npy(
                 disc_fake_y,
                 'disc_fake_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_y'))
 
-            disc_fake_x = discriminator_x(log_fq(fake_x))
+            disc_fake_x = discriminator_x(mel_fq(fake_x))
             save_heatmap_npy(
                 disc_fake_x,
                 'disc_fake_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
-            disc_real_y = discriminator_y(log_fq(test_y['data']))
+            disc_real_y = discriminator_y(mel_fq(test_y['data']))
             save_heatmap_npy(
                 disc_real_y,
                 'disc_real_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
-            disc_real_x = discriminator_x(log_fq(test_x['data']))
+            disc_real_x = discriminator_x(mel_fq(test_x['data']))
             save_heatmap_npy(
                 disc_real_x,
                 'disc_real_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
