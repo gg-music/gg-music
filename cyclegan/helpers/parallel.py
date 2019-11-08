@@ -14,7 +14,7 @@ def batch(iterable, n=1):
         yield iterable[ndx:min(ndx + n, iter_len)]
 
 
-def processing(file_list, par, batch_size=10):
+def processing(file_list, par, batch_size=100):
 
     pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
