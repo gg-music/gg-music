@@ -11,13 +11,12 @@ from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
 from random import shuffle
 
 
-def predict(inp, out, spec_format, model):
-    mag, phase = preprocessing_fn(inp, spec_format)
-    mag = mag[np.newaxis, :]
-    ori = inverse_fn(mag, phase, spec_format)
+def predict(inp, out, model):
+    mag, phase = preprocessing_fn(inp, hpss=False)
+    ori = inverse_fn(mag, phase)
 
     mag = model.predict(mag)
-    pred = inverse_fn(mag, phase, spec_format)
+    pred = inverse_fn(mag, phase)
 
     audio_out = np.append(ori, pred)
     make_dirs(os.path.dirname(out))
@@ -52,11 +51,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True)
     ap.add_argument('-e', '--epoch', required=False, type=int)
-    ap.add_argument('-sp',
-                    '--spectrum',
-                    required=False,
-                    default=0,
-                    help='select spectrum: 0:stft, 1:cqt')
     ap.add_argument('-x', required=True, help='convert from', type=str)
     ap.add_argument('-y', required=True, help='convert to', type=str)
     ap.add_argument('-n',
@@ -92,5 +86,5 @@ if __name__ == "__main__":
                                        os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
                                        wave_basename)
 
-            predict(wav, output_file, args.spectrum, models[model])
+            predict(wav, output_file, models[model])
             print('Prediction saved in', output_file)

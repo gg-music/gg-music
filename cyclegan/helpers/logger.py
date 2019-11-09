@@ -19,3 +19,5 @@ def save_loss_log(hist, save_dir, n_steps, n_epoch):
 def save_heatmap_npy(img, title, save_dir=None):
     make_dirs(save_dir)
     np.save(file=os.path.join(save_dir, title), arr=img)
+
+

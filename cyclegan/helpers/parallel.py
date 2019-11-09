@@ -15,7 +15,6 @@ def batch(iterable, n=1):
 
 
 def processing(file_list, par, batch_size=100):
-
     pool = Pool(processes=cpu_count(), maxtasksperchild=1)
 
     for _ in pool.imap_unordered(par, batch(file_list, batch_size)):
@@ -42,14 +41,10 @@ def batch_plot(batch_file_path, output_dir):
 
 def batch_processing(batch_file_path,
                      output_dir,
-                     spec_format,
-                     to_tfrecord=False,
                      **kwargs):
-
     for file_path in batch_file_path:
-        batch_specs = []
         try:
-            specs, _ = preprocessing_fn(file_path, spec_format, **kwargs)
+            mag, phase = preprocessing_fn(file_path, **kwargs)
         except ValueError:
             os.remove(file_path)
             print("\nremove zero file: " + file_path + "\n")
@@ -58,8 +53,8 @@ def batch_processing(batch_file_path,
             print("\n", err, file_path, "\n")
             continue
 
-        batch_specs.append(specs)
-        batch_specs = np.array(batch_specs)
+        mag = np.array(mag)
+        phase = np.array(phase)
 
         file_name = os.path.basename(file_path).split('.')[-2]
         category = os.path.dirname(file_path).split('/')[-1]
@@ -67,28 +62,17 @@ def batch_processing(batch_file_path,
         category_dir = os.path.join(output_dir, category)
 
         make_dirs(category_dir)
-
-        if to_tfrecord:
-            output2tfrecord(category_dir, file_name, batch_specs)
-        else:
-            output2raw(category_dir, file_name, batch_specs)
+        output2tfrecord(category_dir, file_name, mag, phase)
 
 
-def output2raw(category_dir, file_name, batch_specs):
-    save_file = os.path.join(category_dir, '{}.npy'.format(file_name))
-    np.save(save_file, batch_specs)
-
-    print(save_file)
-
-
-def output2tfrecord(category_dir, file_name, batch_specs):
+def output2tfrecord(category_dir, file_name, mag, phase):
     import tensorflow as tf
     from .example_protocol import np_array_to_example
 
-    save_file = os.path.join(category_dir, '{}.tfrecords'.format(file_name))
+    save_file = os.path.join(category_dir, '{}.tfrecord'.format(file_name))
     with tf.device('/cpu:0'):
         with tf.io.TFRecordWriter(save_file) as writer:
-            tf_example = np_array_to_example(batch_specs, save_file)
+            tf_example = np_array_to_example(mag, phase, save_file)
             writer.write(tf_example)
 
     print(save_file)

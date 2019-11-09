@@ -1,13 +1,13 @@
-import time
 import os
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import time
 import argparse
+
 import tensorflow as tf
 from tqdm import tqdm
 
-from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
+from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.logger import save_loss_log, save_heatmap_npy
 from .helpers.signal import mel_fq
 from .model_settings import *
@@ -21,6 +21,7 @@ ap.add_argument('-m',
                 type=str)
 ap.add_argument('-x', required=True, help='convert from', type=str)
 ap.add_argument('-y', required=True, help='convert to', type=str)
+ap.add_argument('-hpss', required=False, default=0, help='0:harmonic 1:percussion', type=int)
 args = ap.parse_args()
 
 x_rawset_path = os.path.join(RAWSET_PATH, args.x)
@@ -55,10 +56,19 @@ for example_x, example_y in \
     example_y = tf.train.Example.FromString(example_y.numpy())
     test_x = extract_example(example_x)
     test_y = extract_example(example_y)
-    save_heatmap_npy(test_x['data'],
+
+    if args.hpss:
+        test_x = test_x['prec']
+        test_y = test_y['prec']
+    else:
+        test_x = test_x['harm']
+        test_y = test_y['harm']
+
+
+    save_heatmap_npy(test_x,
                      '{}_reference'.format(x_instrument),
                      save_dir=os.path.join(SAVE_DB_PATH, 'fake_y'))
-    save_heatmap_npy(test_y['data'],
+    save_heatmap_npy(test_y,
                      '{}_reference'.format(y_instrument),
                      save_dir=os.path.join(SAVE_DB_PATH, 'fake_x'))
 
@@ -97,7 +107,14 @@ for epoch in range(start, EPOCHS):
         image_x = extract_example(example_x)
         image_y = extract_example(example_y)
 
-        gG, fG, xD, yD = train_step(image_x['data'], image_y['data'], update='gd')
+        if args.hpss:
+            image_x = image_x['prec']
+            image_y = image_y['prec']
+        else:
+            image_x = image_x['harm']
+            image_y = image_y['harm']
+
+        gG, fG, xD, yD = train_step(image_x, image_y, update='gd')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
@@ -106,12 +123,12 @@ for epoch in range(start, EPOCHS):
 
         if n % 10 == 0:
             # generate fake
-            fake_y = generator_g(test_x['data'])
+            fake_y = generator_g(test_x)
             save_heatmap_npy(
                 fake_y,
                 '{}_epoch{:0>2}_step{:0>5}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'fake_y'))
-            fake_x = generator_f(test_y['data'])
+            fake_x = generator_f(test_y)
             save_heatmap_npy(
                 fake_x,
                 '{}_epoch{:0>2}_step{:0>5}'.format(y_instrument, epoch + 1, n),
@@ -131,13 +148,13 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
-            disc_real_y = discriminator_y(mel_fq(test_y['data']))
+            disc_real_y = discriminator_y(mel_fq(test_y))
             save_heatmap_npy(
                 disc_real_y,
                 'disc_real_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
-            disc_real_x = discriminator_x(mel_fq(test_x['data']))
+            disc_real_x = discriminator_x(mel_fq(test_x))
             save_heatmap_npy(
                 disc_real_x,
                 'disc_real_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
