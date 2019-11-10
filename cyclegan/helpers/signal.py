@@ -1,6 +1,7 @@
 import librosa
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -14,8 +15,7 @@ def write_audio(filename, audio, sr=DEFAULT_SAMPLING_RATE):
 
 def add_hf(mag, target_shape):
     rec = np.zeros(target_shape)
-    for i in range(mag.shape[0]):
-        rec[i] = mag[i]
+    rec[0:mag.shape[0], 0:mag.shape[1]] = mag
     return rec
 
 
@@ -111,7 +111,7 @@ def mag_inverse(mag, target_shape, crop_hf=True, normalized=True, convert_db=Tru
     return mag
 
 
-def preprocessing_fn(file_path, spec_type, trim=None):
+def preprocessing_fn(file_path, spec_type=None, trim=None):
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
@@ -127,7 +127,7 @@ def preprocessing_fn(file_path, spec_type, trim=None):
     mag, phase = librosa.magphase(spec)
     mag = mag_processing(mag)
 
-    return mag
+    return mag, phase
 
 
 def inverse_fn(mag, phase, trim=True, **kwargs):
@@ -139,3 +139,25 @@ def inverse_fn(mag, phase, trim=True, **kwargs):
 
     return audio_out
 
+
+def log_fq(spec, nfft=1024, sr=DEFAULT_SAMPLING_RATE):
+    y_ref = tf.transpose(spec[0, :, :, 0])
+
+    nyquest = sr / 2
+    low_fq = nyquest / (1 + nfft / 2)
+    high_fq = y_ref.shape[1] * nyquest / (1 + nfft / 2)
+
+    exp_fq = tf.exp(tf.linspace(tf.math.log(low_fq), tf.math.log(high_fq), y_ref.shape[1]))
+
+    y = tfp.math.batch_interp_regular_1d_grid(
+        exp_fq,
+        x_ref_min=low_fq,
+        x_ref_max=high_fq,
+        y_ref=y_ref,
+        axis=1)
+    y = tf.transpose(y)
+
+    log_spec = tf.stack([y for i in range(3)], axis=-1)
+    log_spec = log_spec[tf.newaxis, :, :, :]
+
+    return log_spec

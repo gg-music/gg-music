@@ -12,10 +12,8 @@ from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
 from random import shuffle
 
 
-def predict(inp, out, model):
-    spec = preprocessing_fn(inp)
-    mag, phase = librosa.magphase(spec)
-
+def predict(inp, out, model, spec_type='harm'):
+    mag, phase = preprocessing_fn(inp, spec_type)
     ori = inverse_fn(mag, phase)
 
     mag = model.predict(mag)

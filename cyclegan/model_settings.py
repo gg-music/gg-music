@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
+from .helpers.signal import log_fq
 from .model.vgg_model import vgg16_model as Discriminator
 from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, differ_loss, discriminator_loss
 
@@ -59,14 +60,14 @@ def train_step(real_x, real_y, update='gd'):
             same_y = generator_g(real_y, training=True)
 
         with tf.device('/gpu:0'):
-            disc_real_x = discriminator_x(real_x, training=True)
+            disc_real_x = discriminator_x(log_fq(real_x), training=True)
         with tf.device('/gpu:1'):
-            disc_real_y = discriminator_y(real_y, training=True)
+            disc_real_y = discriminator_y(log_fq(real_y), training=True)
 
         with tf.device('/gpu:0'):
-            disc_fake_x = discriminator_x(fake_x, training=True)
+            disc_fake_x = discriminator_x(log_fq(fake_x), training=True)
         with tf.device('/gpu:1'):
-            disc_fake_y = discriminator_y(fake_y, training=True)
+            disc_fake_y = discriminator_y(log_fq(fake_y), training=True)
 
         with tf.device('/gpu:1'):
             # calculate the loss

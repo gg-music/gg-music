@@ -46,7 +46,7 @@ def batch_processing(batch_file_path,
     spec_name = {0: '', 1: 'harm', 2: 'perc'}
     for file_path in batch_file_path:
         try:
-            mag = preprocessing_fn(file_path, spec_name[spec_type], **kwargs)
+            mag, phase = preprocessing_fn(file_path, spec_name[spec_type], **kwargs)
         except ValueError:
             os.remove(file_path)
             print("\nremove zero file: " + file_path + "\n")
