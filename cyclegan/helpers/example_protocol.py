@@ -24,13 +24,13 @@ def np_array_to_example(np_array, file):
         'height': _int64_feature(np_array.shape[0]),
         'width': _int64_feature(np_array.shape[1]),
         'title': _bytes_feature(title.encode('utf-8')),
-        'spec': _bytes_feature(np_array.tostring())
+        'spec': _bytes_feature(np_array.astype(dtype=np.complex64).tostring())
     }
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
     return example_proto.SerializeToString()
 
 
-def extract_example(example):
+def extract_example(example, spec_type):
     feature = {
         'height': example.features.feature['height'].int64_list.value[0],
         'width': example.features.feature['width'].int64_list.value[0],
@@ -38,19 +38,20 @@ def extract_example(example):
     }
 
     spec = example.features.feature['spec'].bytes_list.value[0]
-    spec = np.fromstring(spec, dtype=np.complex128)
-    spec = spec.astype(np.complex64)
+    spec = np.fromstring(spec, dtype=np.complex64)
     spec = spec.reshape((feature['height'], feature['width']))
 
-    harm_spec, perc_spec = librosa.decompose.hpss(spec)
-    specs = {'ori': spec, 'harm': harm_spec, 'perc': perc_spec}
+    feature['spec'] = {'ori': spec}
+    feature['mag'] = {'ori': None}
+    feature['phase'] = {'ori': None}
+    if 'harm' in spec_type or 'perc' in spec_type:
+        feature['spec']['harm'], feature['spec']['perc'] = librosa.decompose.hpss(spec)
 
-    for k, v in specs.items():
+    for k, v in feature['spec'].items():
         mag, phase = librosa.magphase(v)
         mag = mag_processing(mag)
 
-        feature[f'{k}_spec'] = v
-        feature[f'{k}_mag'] = mag
-        feature[f'{k}_phase'] = phase
+        feature['mag'][k] = mag
+        feature['phase'][k] = phase
 
     return feature

@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
 from .model.vgg_model import vgg16_model as Discriminator
-from .helpers.signal import mel_fq
+from .helpers.signal import mel_spec
 from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, differ_loss, discriminator_loss
 
 # Generator G translates X -> Y
@@ -36,7 +36,7 @@ with tf.device('/gpu:1'):
 
 
 @tf.function
-def train_step(real_x, real_y, update='gd'):
+def train_step(real_x, real_y, shape, update='gd'):
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:
@@ -60,14 +60,14 @@ def train_step(real_x, real_y, update='gd'):
             same_y = generator_g(real_y, training=True)
 
         with tf.device('/gpu:0'):
-            disc_real_x = discriminator_x(mel_fq(real_x), training=True)
+            disc_real_x = discriminator_x(real_x, training=True)
         with tf.device('/gpu:1'):
-            disc_real_y = discriminator_y(mel_fq(real_y), training=True)
+            disc_real_y = discriminator_y(real_y, training=True)
 
         with tf.device('/gpu:0'):
-            disc_fake_x = discriminator_x(mel_fq(fake_x), training=True)
+            disc_fake_x = discriminator_x(fake_x, training=True)
         with tf.device('/gpu:1'):
-            disc_fake_y = discriminator_y(mel_fq(fake_y), training=True)
+            disc_fake_y = discriminator_y(fake_y, training=True)
 
         with tf.device('/gpu:1'):
             # calculate the loss
@@ -83,6 +83,7 @@ def train_step(real_x, real_y, update='gd'):
 
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
+
     # Calculate the gradients for generator and discriminator
     if 'g' in update:
         with tf.device('/gpu:0'):

@@ -3,6 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
+import librosa
 from .helpers.utils import make_dirs, get_file_list, check_rawdata_exists
 from .helpers.signal import (preprocessing_fn, inverse_fn, write_audio)
 
@@ -12,7 +13,9 @@ from random import shuffle
 
 
 def predict(inp, out, model):
-    mag, phase = preprocessing_fn(inp, hpss=False)
+    spec = preprocessing_fn(inp)
+    mag, phase = librosa.magphase(spec)
+
     ori = inverse_fn(mag, phase)
 
     mag = model.predict(mag)

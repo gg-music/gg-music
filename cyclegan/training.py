@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import time
 import argparse
@@ -9,7 +10,6 @@ from tqdm import tqdm
 from .helpers.example_protocol import extract_example
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.logger import save_loss_log, save_heatmap_npy
-from .helpers.signal import mel_fq
 from .model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
@@ -21,8 +21,10 @@ ap.add_argument('-m',
                 type=str)
 ap.add_argument('-x', required=True, help='convert from', type=str)
 ap.add_argument('-y', required=True, help='convert to', type=str)
-ap.add_argument('-hpss', required=False, default=0, help='0:harmonic 1:percussion', type=int)
+ap.add_argument('-hpss', required=False, default='ori',
+                help='decompose spec type: harm, prec', type=str)
 args = ap.parse_args()
+spec_type = args.hpss
 
 x_rawset_path = os.path.join(RAWSET_PATH, args.x)
 y_rawset_path = os.path.join(RAWSET_PATH, args.y)
@@ -54,16 +56,11 @@ for example_x, example_y in \
     tf.data.Dataset.zip((x_test_dataset, y_test_dataset)):
     example_x = tf.train.Example.FromString(example_x.numpy())
     example_y = tf.train.Example.FromString(example_y.numpy())
-    test_x = extract_example(example_x)
-    test_y = extract_example(example_y)
+    test_image_x = extract_example(example_x, spec_type)
+    test_image_y = extract_example(example_y, spec_type)
 
-    if args.hpss:
-        test_x = test_x['prec']
-        test_y = test_y['prec']
-    else:
-        test_x = test_x['harm']
-        test_y = test_y['harm']
-
+    test_x = test_image_x['mag'][spec_type]
+    test_y = test_image_y['mag'][spec_type]
 
     save_heatmap_npy(test_x,
                      '{}_reference'.format(x_instrument),
@@ -104,17 +101,14 @@ for epoch in range(start, EPOCHS):
     for example_x, example_y in pbar:
         example_x = tf.train.Example.FromString(example_x.numpy())
         example_y = tf.train.Example.FromString(example_y.numpy())
-        image_x = extract_example(example_x)
-        image_y = extract_example(example_y)
+        image_x = extract_example(example_x, spec_type)
+        image_y = extract_example(example_y, spec_type)
 
-        if args.hpss:
-            image_x = image_x['prec']
-            image_y = image_y['prec']
-        else:
-            image_x = image_x['harm']
-            image_y = image_y['harm']
+        real_x = image_x['mag'][spec_type]
+        real_y = image_y['mag'][spec_type]
+        shape = image_x['phase'][spec_type].shape
 
-        gG, fG, xD, yD = train_step(image_x, image_y, update='gd')
+        gG, fG, xD, yD = train_step(real_x, real_y, shape, update='gd')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
@@ -135,26 +129,26 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_DB_PATH, 'fake_x'))
 
             # disc fake
-            disc_fake_y = discriminator_y(mel_fq(fake_y))
+            disc_fake_y = discriminator_y(fake_y)
             save_heatmap_npy(
                 disc_fake_y,
                 'disc_fake_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_y'))
 
-            disc_fake_x = discriminator_x(mel_fq(fake_x))
+            disc_fake_x = discriminator_x(fake_x)
             save_heatmap_npy(
                 disc_fake_x,
                 'disc_fake_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
-            disc_real_y = discriminator_y(mel_fq(test_y))
+            disc_real_y = discriminator_y(test_y)
             save_heatmap_npy(
                 disc_real_y,
                 'disc_real_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
-            disc_real_x = discriminator_x(mel_fq(test_x))
+            disc_real_x = discriminator_x(test_x)
             save_heatmap_npy(
                 disc_real_x,
                 'disc_real_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),

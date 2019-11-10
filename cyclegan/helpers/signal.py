@@ -1,5 +1,6 @@
 import librosa
 import numpy as np
+import tensorflow as tf
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -13,7 +14,8 @@ def write_audio(filename, audio, sr=DEFAULT_SAMPLING_RATE):
 
 def add_hf(mag, target_shape):
     rec = np.zeros(target_shape)
-    rec[0:mag.shape[0], 0:mag.shape[1]] = mag
+    for i in range(mag.shape[0]):
+        rec[i] = mag[i]
     return rec
 
 
@@ -43,7 +45,7 @@ def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
 def db_to_amplitude(mag_db, amin=1 / (2 ** 16), normalize=True):
     if normalize:
         mag_db *= 20 * np.log1p(1 / amin)
-    return amin * np.expm1(mag_db / 20)
+    return amin * tf.math.expm1(mag_db / 20)
 
 
 def to_stft(audio, nfft=1024):
@@ -88,13 +90,13 @@ def mag_processing(mag, crop_hf=True, normalized=True, convert_db=True):
     pad_size = unet_pad_size(mag.shape)
 
     mag = np.pad(mag, pad_size)
-    mag = np.repeat(mag[:, :, np.newaxis], 3, axis=2)
+    mag = np.repeat(mag[:, :, np.newaxis], 3, axis=-1)
     mag = mag[np.newaxis, :]
     return mag
 
 
-def mag_inverse(mag, phase, crop_hf=True, normalized=True, convert_db=True):
-    mag = mag[0, :, :phase.shape[1], 0]
+def mag_inverse(mag, target_shape, crop_hf=True, normalized=True, convert_db=True):
+    mag = mag[0, :, :target_shape[1], 0]
 
     if convert_db:
         mag = (mag + 1) / 2
@@ -104,36 +106,23 @@ def mag_inverse(mag, phase, crop_hf=True, normalized=True, convert_db=True):
         mag = undo_normalize(mag)
 
     if crop_hf:
-        mag = add_hf(mag, target_shape=[phase.shape[0], mag.shape[1]])
+        mag = add_hf(mag, target_shape=target_shape)
 
     return mag
 
 
-def preprocessing_fn(file_path, trim=None, hpss=True, **kwargs):
+def preprocessing_fn(file_path, trim=None):
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
         trim_length = int(sr * trim)
         signal = signal[:trim_length]
-
-    S = to_stft(signal)
-
-    if hpss:
-        S = librosa.decompose.hpss(S)
-    else:
-        S = [S]
-
-    specs = []
-    for D in S:
-        mag, phase = librosa.magphase(D)
-        mag = mag_processing(mag, **kwargs)
-        specs.append([mag, phase])
-
-    return specs
+    spec = to_stft(signal)
+    return spec
 
 
 def inverse_fn(mag, phase, trim=True, **kwargs):
-    mag = mag_inverse(mag, phase, **kwargs)
+    mag = mag_inverse(mag, phase.shape, **kwargs)
     audio_out = inverse_stft(mag, phase)
     if trim:
         # trim 0.1s start/end burst artifact
@@ -142,11 +131,9 @@ def inverse_fn(mag, phase, trim=True, **kwargs):
     return audio_out
 
 
-def mel_fq(mag, phase):
-    mag = mag_inverse(mag, phase)
-
-    S = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
-    mag, phase = librosa.magphase(S)
-
-    mel_spec = mag_processing(mag, crop_hf=False)
-    return mel_spec
+def mel_spec(mag):
+    shape = (513, 255)
+    mag = mag_inverse(mag, shape)
+    mag = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
+    mag = mag_processing(mag, crop_hf=False)
+    return mag
