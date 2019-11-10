@@ -16,7 +16,7 @@ if __name__ == '__main__':
     ap.add_argument('-b',
                     '--batch_size',
                     required=False,
-                    default=100,
+                    default=10,
                     help='files per batch',
                     type=int)
     args = ap.parse_args()

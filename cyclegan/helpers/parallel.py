@@ -44,7 +44,7 @@ def batch_processing(batch_file_path,
                      **kwargs):
     for file_path in batch_file_path:
         try:
-            mag, phase = preprocessing_fn(file_path, **kwargs)
+            spec = preprocessing_fn(file_path, **kwargs)
         except ValueError:
             os.remove(file_path)
             print("\nremove zero file: " + file_path + "\n")
@@ -53,8 +53,7 @@ def batch_processing(batch_file_path,
             print("\n", err, file_path, "\n")
             continue
 
-        mag = np.array(mag)
-        phase = np.array(phase)
+        spec = np.array(spec)
 
         file_name = os.path.basename(file_path).split('.')[-2]
         category = os.path.dirname(file_path).split('/')[-1]
@@ -62,17 +61,17 @@ def batch_processing(batch_file_path,
         category_dir = os.path.join(output_dir, category)
 
         make_dirs(category_dir)
-        output2tfrecord(category_dir, file_name, mag, phase)
+        output2tfrecord(category_dir, file_name, spec)
 
 
-def output2tfrecord(category_dir, file_name, mag, phase):
+def output2tfrecord(category_dir, file_name, spec):
     import tensorflow as tf
     from .example_protocol import np_array_to_example
 
     save_file = os.path.join(category_dir, '{}.tfrecord'.format(file_name))
     with tf.device('/cpu:0'):
         with tf.io.TFRecordWriter(save_file) as writer:
-            tf_example = np_array_to_example(mag, phase, save_file)
+            tf_example = np_array_to_example(spec, save_file)
             writer.write(tf_example)
 
     print(save_file)
