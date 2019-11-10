@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from .segmentation_models.nestnet import Nestnet as Generator
 from .model.vgg_model import vgg16_model as Discriminator
-from .helpers.signal import mel_spec
 from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, differ_loss, discriminator_loss
 
 # Generator G translates X -> Y
@@ -36,7 +35,7 @@ with tf.device('/gpu:1'):
 
 
 @tf.function
-def train_step(real_x, real_y, shape, update='gd'):
+def train_step(real_x, real_y, update='gd'):
     # persistent is set to True because the tape is used more than
     # once to calculate the gradients.
     with tf.GradientTape(persistent=True) as tape:

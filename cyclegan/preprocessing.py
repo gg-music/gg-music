@@ -19,6 +19,12 @@ if __name__ == '__main__':
                     default=10,
                     help='files per batch',
                     type=int)
+    ap.add_argument('-sp',
+                    '--spec',
+                    required=False,
+                    default=0,
+                    help='spec type: 0.original 1.harmonic 2.percussion',
+                    type=int)
     args = ap.parse_args()
 
     if not os.path.isdir(args.src_path):
@@ -27,6 +33,7 @@ if __name__ == '__main__':
     file_list = get_file_list(args.src_path)
 
     par = partial(batch_processing,
-                  output_dir=os.path.join(RAWSET_PATH))
+                  output_dir=os.path.join(RAWSET_PATH),
+                  spec_type=args.spec)
 
     processing(file_list, par, args.batch_size)

@@ -111,14 +111,23 @@ def mag_inverse(mag, target_shape, crop_hf=True, normalized=True, convert_db=Tru
     return mag
 
 
-def preprocessing_fn(file_path, trim=None):
+def preprocessing_fn(file_path, spec_type, trim=None):
     signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
 
     if trim:
         trim_length = int(sr * trim)
         signal = signal[:trim_length]
     spec = to_stft(signal)
-    return spec
+
+    if spec_type:
+        specs = {}
+        specs['harm'], specs['perc'] = librosa.decompose.hpss(spec)
+        spec = specs[spec_type]
+
+    mag, phase = librosa.magphase(spec)
+    mag = mag_processing(mag)
+
+    return mag
 
 
 def inverse_fn(mag, phase, trim=True, **kwargs):
@@ -130,10 +139,3 @@ def inverse_fn(mag, phase, trim=True, **kwargs):
 
     return audio_out
 
-
-def mel_spec(mag):
-    shape = (513, 255)
-    mag = mag_inverse(mag, shape)
-    mag = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
-    mag = mag_processing(mag, crop_hf=False)
-    return mag

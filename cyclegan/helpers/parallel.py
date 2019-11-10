@@ -41,10 +41,12 @@ def batch_plot(batch_file_path, output_dir):
 
 def batch_processing(batch_file_path,
                      output_dir,
+                     spec_type,
                      **kwargs):
+    spec_name = {0: '', 1: 'harm', 2: 'perc'}
     for file_path in batch_file_path:
         try:
-            spec = preprocessing_fn(file_path, **kwargs)
+            mag = preprocessing_fn(file_path, spec_name[spec_type], **kwargs)
         except ValueError:
             os.remove(file_path)
             print("\nremove zero file: " + file_path + "\n")
@@ -53,15 +55,13 @@ def batch_processing(batch_file_path,
             print("\n", err, file_path, "\n")
             continue
 
-        spec = np.array(spec)
-
         file_name = os.path.basename(file_path).split('.')[-2]
         category = os.path.dirname(file_path).split('/')[-1]
-        category = f'{category}'
+        category = f'{category}_{spec_name[spec_type]}'
         category_dir = os.path.join(output_dir, category)
 
         make_dirs(category_dir)
-        output2tfrecord(category_dir, file_name, spec)
+        output2tfrecord(category_dir, file_name, mag)
 
 
 def output2tfrecord(category_dir, file_name, spec):

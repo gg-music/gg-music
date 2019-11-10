@@ -1,14 +1,13 @@
+import time
 import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import time
 import argparse
-
 import tensorflow as tf
 from tqdm import tqdm
 
-from .helpers.example_protocol import extract_example
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
+from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
 from .model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
@@ -21,10 +20,7 @@ ap.add_argument('-m',
                 type=str)
 ap.add_argument('-x', required=True, help='convert from', type=str)
 ap.add_argument('-y', required=True, help='convert to', type=str)
-ap.add_argument('-hpss', required=False, default='ori',
-                help='decompose spec type: harm, prec', type=str)
 args = ap.parse_args()
-spec_type = args.hpss
 
 x_rawset_path = os.path.join(RAWSET_PATH, args.x)
 y_rawset_path = os.path.join(RAWSET_PATH, args.y)
@@ -56,16 +52,12 @@ for example_x, example_y in \
     tf.data.Dataset.zip((x_test_dataset, y_test_dataset)):
     example_x = tf.train.Example.FromString(example_x.numpy())
     example_y = tf.train.Example.FromString(example_y.numpy())
-    test_image_x = extract_example(example_x, spec_type)
-    test_image_y = extract_example(example_y, spec_type)
-
-    test_x = test_image_x['mag'][spec_type]
-    test_y = test_image_y['mag'][spec_type]
-
-    save_heatmap_npy(test_x,
+    test_x = extract_example(example_x)
+    test_y = extract_example(example_y)
+    save_heatmap_npy(test_x['data'],
                      '{}_reference'.format(x_instrument),
                      save_dir=os.path.join(SAVE_DB_PATH, 'fake_y'))
-    save_heatmap_npy(test_y,
+    save_heatmap_npy(test_y['data'],
                      '{}_reference'.format(y_instrument),
                      save_dir=os.path.join(SAVE_DB_PATH, 'fake_x'))
 
@@ -88,10 +80,8 @@ if ckpt_manager.latest_checkpoint:
     print('Latest checkpoint epoch {} restored!!'.format(last_epoch))
 
 start = len(ckpt_manager.checkpoints)
-loss_history = {
-    'Generator': {'f': [], 'g': []},
-    'Discriminator': {'x': [], 'y': []}
-}
+loss_history = {'Generator': {'f': [], 'g': []},
+                'Discriminator': {'x': [], 'y': []}}
 for epoch in range(start, EPOCHS):
 
     start = time.time()
@@ -101,14 +91,10 @@ for epoch in range(start, EPOCHS):
     for example_x, example_y in pbar:
         example_x = tf.train.Example.FromString(example_x.numpy())
         example_y = tf.train.Example.FromString(example_y.numpy())
-        image_x = extract_example(example_x, spec_type)
-        image_y = extract_example(example_y, spec_type)
+        image_x = extract_example(example_x)
+        image_y = extract_example(example_y)
 
-        real_x = image_x['mag'][spec_type]
-        real_y = image_y['mag'][spec_type]
-        shape = image_x['phase'][spec_type].shape
-
-        gG, fG, xD, yD = train_step(real_x, real_y, shape, update='gd')
+        gG, fG, xD, yD = train_step(image_x['data'], image_y['data'], update='gd')
 
         loss_history['Generator']['g'].append(gG.numpy())
         loss_history['Generator']['f'].append(fG.numpy())
@@ -117,12 +103,12 @@ for epoch in range(start, EPOCHS):
 
         if n % 10 == 0:
             # generate fake
-            fake_y = generator_g(test_x)
+            fake_y = generator_g(test_x['data'])
             save_heatmap_npy(
                 fake_y,
                 '{}_epoch{:0>2}_step{:0>5}'.format(x_instrument, epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'fake_y'))
-            fake_x = generator_f(test_y)
+            fake_x = generator_f(test_y['data'])
             save_heatmap_npy(
                 fake_x,
                 '{}_epoch{:0>2}_step{:0>5}'.format(y_instrument, epoch + 1, n),
@@ -142,13 +128,13 @@ for epoch in range(start, EPOCHS):
                 os.path.join(SAVE_DB_PATH, 'disc_fake_x'))
 
             # disc real
-            disc_real_y = discriminator_y(test_y)
+            disc_real_y = discriminator_y(test_y['data'])
             save_heatmap_npy(
                 disc_real_y,
                 'disc_real_y_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
                 os.path.join(SAVE_DB_PATH, 'disc_real_y'))
 
-            disc_real_x = discriminator_x(test_x)
+            disc_real_x = discriminator_x(test_x['data'])
             save_heatmap_npy(
                 disc_real_x,
                 'disc_real_x_epoch{:0>2}_step{:0>5}'.format(epoch + 1, n),
