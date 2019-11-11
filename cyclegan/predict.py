@@ -12,7 +12,7 @@ from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
 from random import shuffle
 
 
-def predict(inp, out, model, spec_type='harm'):
+def predict(inp, model, spec_type=None):
     mag, phase = preprocessing_fn(inp, spec_type)
     ori = inverse_fn(mag, phase)
 
@@ -20,8 +20,8 @@ def predict(inp, out, model, spec_type='harm'):
     pred = inverse_fn(mag, phase)
 
     audio_out = np.append(ori, pred)
-    make_dirs(os.path.dirname(out))
-    write_audio(out, audio_out, DEFAULT_SAMPLING_RATE)
+    return audio_out
+
 
 
 def load_model(model_path, n_epoch):
@@ -51,7 +51,9 @@ def load_model(model_path, n_epoch):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-m', '--model', required=True)
+    ap.add_argument('-m2', '--model2', required=False)
     ap.add_argument('-e', '--epoch', required=False, type=int)
+    ap.add_argument('-e2', '--epoch2', required=False, type=int)
     ap.add_argument('-x', required=True, help='convert from', type=str)
     ap.add_argument('-y', required=True, help='convert to', type=str)
     ap.add_argument('-n',
@@ -62,8 +64,8 @@ if __name__ == "__main__":
                     type=int)
     args = ap.parse_args()
 
-    MODEL_PATH = os.path.join(MODEL_ROOT_PATH, args.model)
-    SAVE_WAV_PATH = os.path.join(MODEL_PATH, 'wav')
+
+
     instrument_x_wav_path = os.path.join(WAVS_TO_PREDICT_ROOT_PATH, args.x)
     instrument_y_wav_path = os.path.join(WAVS_TO_PREDICT_ROOT_PATH, args.y)
 
@@ -76,7 +78,15 @@ if __name__ == "__main__":
     input_files_x = input_files_x[:args.n_samples]
     input_files_y = input_files_y[:args.n_samples]
 
+    MODEL_PATH = os.path.join(MODEL_ROOT_PATH, args.model)
+    SAVE_WAV_PATH = os.path.join(MODEL_PATH, 'wav')
+
     ckpt, ckpt_manager, models, epoch = load_model(MODEL_PATH, args.epoch)
+
+    if args.model2:
+
+        MODEL2_PATH = os.path.join(MODEL_ROOT_PATH, args.model2)
+        _, _, models2, _ = load_model(MODEL_PATH, args.epoch2)
 
     input_files = {'g': input_files_x, 'f': input_files_y}
 
@@ -87,5 +97,13 @@ if __name__ == "__main__":
                                        os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
                                        wave_basename)
 
-            predict(wav, output_file, models[model])
+            if args.model2:
+                audio_out = predict(wav, models[model], spec_type='harm')
+                audio_out += predict(wav, models2[model], spec_type='perc')
+            else:
+                audio_out = predict(wav, models[model], spec_type='ori')
+
+            make_dirs(os.path.dirname(output_file))
+
+            write_audio(output_file, audio_out, DEFAULT_SAMPLING_RATE)
             print('Prediction saved in', output_file)

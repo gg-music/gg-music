@@ -12,7 +12,6 @@ TEST_DIR = '/home/gtzan/ssd/test'
 inp = '/home/gtzan/data/gan_preprocessing/wav/sax/sax-0003.wav'
 
 mag, phase = preprocessing_fn(inp)
-mag = mag[tf.newaxis, :]
 print(mag.shape)
 plot_heat_map(mag, title='real_x', save_dir=TEST_DIR)
 
