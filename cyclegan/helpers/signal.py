@@ -35,6 +35,10 @@ def undo_normalize(mag, nfft=1024):
     return mag
 
 
+def mag_phase_to_S(mag, phase):
+    S = mag * np.exp(1j * phase)
+    return S
+
 def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
     mag_db = 20 * np.log1p(mag / amin)
     if normalize:
@@ -55,9 +59,29 @@ def to_stft(audio, nfft=1024):
 
 
 def inverse_stft(mag, phase, nfft=1024):
-    S = mag * np.exp(1j * phase)
+    S = mag_phase_to_S(mag, phase)
     window = np.hanning(nfft)
     audio = librosa.istft(S, hop_length=int(nfft / 2), window=window)
+    return audio
+
+def to_cqt(audio, nfft=1024, normalize=True):
+    # A0(27.5Hz) -> B7(3951.066Hz)
+    window = np.hanning(int(nfft))
+    S = librosa.cqt(audio, n_bins=512, bins_per_octave=12 * 6,
+                    hop_length=int(nfft / 2),
+                    fmin=librosa.note_to_hz('A0'))
+    mag, phase = librosa.magphase(S)
+    return mag, phase
+
+
+def inverse_cqt(mag, phase, nfft=1024, normalize=True):
+    window = np.hanning(int(nfft))
+    if normalize:
+        mag = mag * np.sum(window) / 2
+    S = mag_phase_to_S(mag, phase)
+    audio = librosa.icqt(S, hop_length=int(nfft / 2 ** 3),
+                         bins_per_octave=12 * 6,
+                         fmin=librosa.note_to_hz('A0'))
     return audio
 
 
@@ -161,3 +185,10 @@ def log_fq(spec, nfft=1024, sr=DEFAULT_SAMPLING_RATE):
     log_spec = log_spec[tf.newaxis, :, :, :]
 
     return log_spec
+
+def mel_spec(mag):
+    shape = (513, 255)
+    mag = mag_inverse(mag, shape)
+    mag = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
+    mag = mag_processing(mag, crop_hf=False)
+    return mag

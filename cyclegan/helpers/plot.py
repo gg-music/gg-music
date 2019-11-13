@@ -54,7 +54,7 @@ def plot_epoch_loss(hist, save_dir, n_steps, n_epoch):
         plt.close()
 
 
-def plot_heat_map(img, title, save_dir):
+def plot_heat_map(img, title, save_dir=None):
     img = img[0, :, :, 0]
     img = (img + 1) / 2
     if 'disc' in title:
