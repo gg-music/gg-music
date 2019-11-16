@@ -1,7 +1,9 @@
+import os
 import librosa
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
+from ..helpers.plot import plot_heat_map
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
@@ -196,9 +198,11 @@ def preprocessing_fn(file_path, spec_type=None, trim=None, **kwargs):
 
 def predict(inp, model, spec_type=None):
     mag, phase = preprocessing_fn(inp, spec_type)
+    plot_heat_map(mag, os.path.basename(inp) + '_ori')
     ori = inverse_fn(mag, phase)
 
     mag = model.predict(mag)
+    plot_heat_map(mag, os.path.basename(inp) + '_predict')
     pred = inverse_fn(mag, phase)
 
     return ori, pred

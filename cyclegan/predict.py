@@ -4,7 +4,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
 import librosa
+import tensorflow as tf
+from tensorflow.keras.models import clone_model
 from .helpers.utils import make_dirs, load_model, get_file_list, check_rawdata_exists
+from .model.model_settings import generator_g, generator_f
 from .helpers.signal import predict, write_audio
 from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
                        WAVS_TO_PREDICT_ROOT_PATH)
@@ -40,12 +43,23 @@ if __name__ == "__main__":
 
     MODEL_PATH = os.path.join(MODEL_ROOT_PATH, args.model)
     SAVE_WAV_PATH = os.path.join(MODEL_PATH, 'wav')
-
-    ckpt, ckpt_manager, models, epoch = load_model(MODEL_PATH, args.epoch)
+    g1 = clone_model(generator_g)
+    f1 = clone_model(generator_f)
+    ckpt = tf.train.Checkpoint(generator_g=g1,
+                               generator_f=f1)
+    ckpt_manager = tf.train.CheckpointManager(ckpt, MODEL_PATH, max_to_keep=100)
+    load_model(args.epoch, ckpt, ckpt_manager)
+    models = {'g': g1, 'f': f1}
 
     if args.model2:
         MODEL2_PATH = os.path.join(MODEL_ROOT_PATH, args.model2)
-        _, _, models2, _ = load_model(MODEL_PATH, args.epoch2)
+        g2 = clone_model(generator_g)
+        f2 = clone_model(generator_f)
+        ckpt2 = tf.train.Checkpoint(generator_g=g2,
+                                    generator_f=f2)
+        ckpt_manager2 = tf.train.CheckpointManager(ckpt2, MODEL2_PATH, max_to_keep=100)
+        load_model(args.epoch2, ckpt2, ckpt_manager2)
+        models2 = {'g': g2, 'f': f2}
 
     input_files = {'g': input_files_x, 'f': input_files_y}
 
@@ -53,7 +67,7 @@ if __name__ == "__main__":
         for wav in wavs:
             wave_basename = os.path.basename(wav)
             output_file = os.path.join(SAVE_WAV_PATH, args.model + "-" +
-                                       os.path.basename(ckpt_manager.checkpoints[epoch - 1]) + "-" +
+                                       os.path.basename(ckpt_manager.checkpoints[args.epoch - 1]) + "-" +
                                        wave_basename)
 
             if args.model2:
