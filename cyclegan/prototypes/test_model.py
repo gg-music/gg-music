@@ -6,24 +6,25 @@ from cyclegan.segmentation_models.nestnet import Nestnet as Generator
 from cyclegan.model.vgg_model import vgg16_model as Discriminator
 
 from cyclegan.helpers.signal import preprocessing_fn, inverse_fn, write_audio, mag_phase_to_S, mel_spec
-from cyclegan.helpers.signal import mag_processing, mag_inverse, to_cqt, load_audio, log_fq
+from cyclegan.helpers.signal import mag_processing, mag_inverse, to_cqt, load_audio
 from cyclegan.helpers.plot import plot_heat_map
 from cyclegan.settings import DEFAULT_SAMPLING_RATE
 import tensorflow as tf
 
 TEST_DIR = '/home/gtzan/ssd/test'
-inp = '/home/gtzan/data/gan_preprocessing/wav/piano/piano1-0331.wav'
+inp = '/home/gtzan/data/fma_large/003/003771.mp3'
 
 # CQT
 audio = load_audio(inp, sr=DEFAULT_SAMPLING_RATE)
 mag, phase = to_cqt(audio)
 mag = mag_processing(mag, crop_hf=False)
-plot_heat_map(mag, title='piano_cqt')
+# plot_heat_map(mag, title='cqt')
 
 # STFT
 mag, phase = preprocessing_fn(inp)
 print(mag.shape)
-plot_heat_map(mel_spec(mag), title='piano_mel')
+plot_heat_map(mag, title='piano_stft')
+plot_heat_map(mel_spec(mag), title=os.path.basename(inp))
 
 audio_out = inverse_fn(mag, phase)
 output_filename = os.path.join(TEST_DIR, f'clear_{os.path.basename(inp)}')

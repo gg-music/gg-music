@@ -1,7 +1,7 @@
-import time
-from pydub import AudioSegment
-import argparse
 import os
+import time
+import argparse
+from pydub import AudioSegment
 
 parser = argparse.ArgumentParser(
     description='cut raw music into "n" seconds/part')
@@ -28,7 +28,7 @@ except Exception as e:
 spilit_time = args.seconds * 1000
 folder_name = args.input.split(
     '/')[-1][0:-4] if not args.suffix else args.input.split(
-        '/')[-1][0:-4] + '_' + args.suffix
+    '/')[-1][0:-4] + '_' + args.suffix
 
 output_dir = f'/home/gtzan/data/gan_preprocessing/wav/{folder_name}'
 
@@ -40,7 +40,7 @@ for i in range(0, 100000000000):
     end = begin + spilit_time
     new_audio = raw_audio[begin:end]
 
-    if (len(new_audio) < spilit_time):
+    if len(new_audio) < spilit_time:
         break
 
     file_name = '{}{}{:04d}{}'.format(folder_name, '-', i, '.wav')
