@@ -1,9 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
-from .segmentation_models.nestnet import Nestnet as Generator
-from .helpers.signal import log_fq
-from .model.vgg_model import vgg16_model as Discriminator
-from .helpers.losses import generator_loss, calc_cycle_loss, identity_loss, differ_loss, discriminator_loss
+from ..segmentation_models.nestnet import Nestnet as Generator
+from ..helpers.signal import log_fq
+from .vgg_model import vgg16_model as Discriminator
+from .losses import generator_loss, calc_cycle_loss, discriminator_loss
 
 # Generator G translates X -> Y
 # Generator F translates Y -> X.

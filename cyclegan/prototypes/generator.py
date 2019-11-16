@@ -4,8 +4,8 @@ from tensorflow.keras.layers import Conv2DTranspose, Input, ZeroPadding2D, MaxPo
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 import numpy as np
-from .helpers.utils import unet_padding_size
-from .settings import DROPOUT_RATE, BN_AXIS
+from ..helpers.signal import unet_pad_size
+from ..settings import DROPOUT_RATE, BN_AXIS
 
 
 def standard_unit(input_tensor, stage, nb_filter, kernel_size=3):
@@ -31,7 +31,7 @@ def standard_unit(input_tensor, stage, nb_filter, kernel_size=3):
 
 def get_model(img_rows, img_cols):
     initializer = tf.random_normal_initializer(0., 0.02)
-    padding_size = ((0, 0), unet_padding_size(img_cols, 2))
+    padding_size = ((0, 0), unet_pad_size(img_cols, 2))
     nb_filter = [64, 128, 256, 512, 512]
 
     # Handle Dimension Ordering for different backends

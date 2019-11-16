@@ -4,49 +4,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
 import numpy as np
 import librosa
-from .helpers.utils import make_dirs, get_file_list, check_rawdata_exists
-from .helpers.signal import (preprocessing_fn, inverse_fn, write_audio)
-
+from .helpers.utils import make_dirs, load_model, get_file_list, check_rawdata_exists
+from .helpers.signal import predict, write_audio
 from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
                        WAVS_TO_PREDICT_ROOT_PATH)
 from random import shuffle
-
-
-def predict(inp, model, spec_type=None):
-    mag, phase = preprocessing_fn(inp, spec_type)
-    ori = inverse_fn(mag, phase)
-
-    mag = model.predict(mag)
-    pred = inverse_fn(mag, phase)
-
-    audio_out = np.append(ori, pred)
-    return audio_out
-
-
-
-def load_model(model_path, n_epoch):
-    import tensorflow as tf
-    from .model_settings import generator_g, generator_f
-
-    ckpt = tf.train.Checkpoint(generator_g=generator_g,
-                               generator_f=generator_f)
-
-    ckpt_manager = tf.train.CheckpointManager(ckpt, model_path, max_to_keep=100)
-    last_epoch = len(ckpt_manager.checkpoints)
-
-    if n_epoch:
-        epoch = n_epoch
-        ckpt.restore(ckpt_manager.checkpoints[epoch - 1]).expect_partial()
-        print('Checkpoint epoch {} restored!!'.format(epoch))
-    else:
-        epoch = last_epoch
-        ckpt.restore(ckpt_manager.checkpoints[epoch - 1]).expect_partial()
-        print('Latest checkpoint epoch {} restored!!'.format(epoch))
-
-    models = {'g': generator_g, 'f': generator_f}
-
-    return ckpt, ckpt_manager, models, epoch
-
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
@@ -63,8 +25,6 @@ if __name__ == "__main__":
                     help='n_samples to predict each instrument',
                     type=int)
     args = ap.parse_args()
-
-
 
     instrument_x_wav_path = os.path.join(WAVS_TO_PREDICT_ROOT_PATH, args.x)
     instrument_y_wav_path = os.path.join(WAVS_TO_PREDICT_ROOT_PATH, args.y)
@@ -84,7 +44,6 @@ if __name__ == "__main__":
     ckpt, ckpt_manager, models, epoch = load_model(MODEL_PATH, args.epoch)
 
     if args.model2:
-
         MODEL2_PATH = os.path.join(MODEL_ROOT_PATH, args.model2)
         _, _, models2, _ = load_model(MODEL_PATH, args.epoch2)
 
@@ -98,10 +57,16 @@ if __name__ == "__main__":
                                        wave_basename)
 
             if args.model2:
-                audio_out = predict(wav, models[model], spec_type='harm')
-                audio_out += predict(wav, models2[model], spec_type='perc')
+                ori, pred = predict(wav, models[model], spec_type='harm')
+                ori2, pred2 = predict(wav, models2[model], spec_type='perc')
+                ori += ori2
+                pred += pred2
             else:
-                audio_out = predict(wav, models[model], spec_type='ori')
+                ori, pred = predict(wav, models[model], spec_type=None)
+
+            ori = librosa.util.normalize(ori, norm=np.inf, axis=None)
+            pred = librosa.util.normalize(pred, norm=np.inf, axis=None)
+            audio_out = np.append(ori, pred)
 
             make_dirs(os.path.dirname(output_file))
 

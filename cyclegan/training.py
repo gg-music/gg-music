@@ -3,14 +3,12 @@ import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
-import tensorflow as tf
 from tqdm import tqdm
 
 from .helpers.utils import get_file_list, make_dirs, check_rawdata_exists
 from .helpers.example_protocol import extract_example
 from .helpers.logger import save_loss_log, save_heatmap_npy
-from .helpers.signal import log_fq
-from .model_settings import *
+from .model.model_settings import *
 from .settings import EPOCHS, MODEL_ROOT_PATH, STEPS, RAWSET_PATH
 
 ap = argparse.ArgumentParser()

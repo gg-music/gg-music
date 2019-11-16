@@ -39,6 +39,7 @@ def mag_phase_to_S(mag, phase):
     S = mag * np.exp(1j * phase)
     return S
 
+
 def amplitude_to_db(mag, amin=1 / (2 ** 16), normalize=True):
     mag_db = 20 * np.log1p(mag / amin)
     if normalize:
@@ -64,7 +65,8 @@ def inverse_stft(mag, phase, nfft=1024):
     audio = librosa.istft(S, hop_length=int(nfft / 2), window=window)
     return audio
 
-def to_cqt(audio, nfft=1024, normalize=True):
+
+def to_cqt(audio, nfft=1024):
     # A0(27.5Hz) -> B7(3951.066Hz)
     window = np.hanning(int(nfft))
     S = librosa.cqt(audio, n_bins=512, bins_per_octave=12 * 6,
@@ -74,10 +76,7 @@ def to_cqt(audio, nfft=1024, normalize=True):
     return mag, phase
 
 
-def inverse_cqt(mag, phase, nfft=1024, normalize=True):
-    window = np.hanning(int(nfft))
-    if normalize:
-        mag = mag * np.sum(window) / 2
+def inverse_cqt(mag, phase, nfft=1024):
     S = mag_phase_to_S(mag, phase)
     audio = librosa.icqt(S, hop_length=int(nfft / 2 ** 3),
                          bins_per_octave=12 * 6,
@@ -135,25 +134,6 @@ def mag_inverse(mag, target_shape, crop_hf=True, normalized=True, convert_db=Tru
     return mag
 
 
-def preprocessing_fn(file_path, spec_type=None, trim=None):
-    signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
-
-    if trim:
-        trim_length = int(sr * trim)
-        signal = signal[:trim_length]
-    spec = to_stft(signal)
-
-    if spec_type:
-        specs = {}
-        specs['harm'], specs['perc'] = librosa.decompose.hpss(spec)
-        spec = specs[spec_type]
-
-    mag, phase = librosa.magphase(spec)
-    mag = mag_processing(mag)
-
-    return mag, phase
-
-
 def inverse_fn(mag, phase, trim=True, **kwargs):
     mag = mag_inverse(mag, phase.shape, **kwargs)
     audio_out = inverse_stft(mag, phase)
@@ -186,9 +166,39 @@ def log_fq(spec, nfft=1024, sr=DEFAULT_SAMPLING_RATE):
 
     return log_spec
 
+
 def mel_spec(mag):
     shape = (513, 255)
     mag = mag_inverse(mag, shape)
     mag = librosa.feature.melspectrogram(S=mag, n_mels=256, sr=DEFAULT_SAMPLING_RATE)
     mag = mag_processing(mag, crop_hf=False)
     return mag
+
+
+def preprocessing_fn(file_path, spec_type=None, trim=None, **kwargs):
+    signal, sr = librosa.load(file_path, sr=DEFAULT_SAMPLING_RATE)
+
+    if trim:
+        trim_length = int(sr * trim)
+        signal = signal[:trim_length]
+    spec = to_stft(signal)
+
+    if spec_type:
+        specs = {}
+        specs['harm'], specs['perc'] = librosa.decompose.hpss(spec)
+        spec = specs[spec_type]
+
+    mag, phase = librosa.magphase(spec)
+    mag = mag_processing(mag, **kwargs)
+
+    return mag, phase
+
+
+def predict(inp, model, spec_type=None):
+    mag, phase = preprocessing_fn(inp, spec_type)
+    ori = inverse_fn(mag, phase)
+
+    mag = model.predict(mag)
+    pred = inverse_fn(mag, phase)
+
+    return ori, pred
