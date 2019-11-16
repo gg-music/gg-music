@@ -1,4 +1,5 @@
 import os
+import copy
 
 
 def get_file_list(src_dir):
@@ -20,14 +21,8 @@ def check_rawdata_exists(path_x, path_y):
         raise FileNotFoundError("input instrument pair does not exists")
 
 
-def load_model(model_path, n_epoch):
+def load_model(n_epoch, ckpt, ckpt_manager):
     import tensorflow as tf
-    from cyclegan.model.model_settings import generator_g, generator_f
-
-    ckpt = tf.train.Checkpoint(generator_g=generator_g,
-                               generator_f=generator_f)
-
-    ckpt_manager = tf.train.CheckpointManager(ckpt, model_path, max_to_keep=100)
     last_epoch = len(ckpt_manager.checkpoints)
 
     if n_epoch:
@@ -39,6 +34,4 @@ def load_model(model_path, n_epoch):
         ckpt.restore(ckpt_manager.checkpoints[epoch - 1]).expect_partial()
         print('Latest checkpoint epoch {} restored!!'.format(epoch))
 
-    models = {'g': generator_g, 'f': generator_f}
-
-    return ckpt, ckpt_manager, models, epoch
+    return ckpt_manager, epoch

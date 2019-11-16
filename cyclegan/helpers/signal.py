@@ -1,7 +1,9 @@
+import os
 import librosa
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
+from ..helpers.plot import plot_heat_map
 from ..settings import DEFAULT_SAMPLING_RATE
 
 
