@@ -2,6 +2,8 @@ import os
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import argparse
+import numpy as np
+import librosa
 from .helpers.utils import make_dirs, load_model, get_file_list, check_rawdata_exists
 from .helpers.signal import predict, write_audio
 from .settings import (DEFAULT_SAMPLING_RATE, MODEL_ROOT_PATH,
@@ -55,10 +57,16 @@ if __name__ == "__main__":
                                        wave_basename)
 
             if args.model2:
-                audio_out = predict(wav, models[model], spec_type='harm')
-                audio_out += predict(wav, models2[model], spec_type='perc')
+                ori, pred = predict(wav, models[model], spec_type='harm')
+                ori2, pred2 = predict(wav, models2[model], spec_type='perc')
+                ori += ori2
+                pred += pred2
             else:
-                audio_out = predict(wav, models[model], spec_type=None)
+                ori, pred = predict(wav, models[model], spec_type=None)
+
+            ori = librosa.util.normalize(ori, norm=np.inf, axis=None)
+            pred = librosa.util.normalize(pred, norm=np.inf, axis=None)
+            audio_out = np.append(ori, pred)
 
             make_dirs(os.path.dirname(output_file))
 

@@ -201,5 +201,4 @@ def predict(inp, model, spec_type=None):
     mag = model.predict(mag)
     pred = inverse_fn(mag, phase)
 
-    audio_out = np.append(ori, pred)
-    return audio_out
+    return ori, pred
